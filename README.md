@@ -111,7 +111,7 @@ please contact: mr.kaith@gmail.com Website:https://www.itsbegin.in/
 ## 📸 Screenshots
 
 ### 🖥️ Dashboard
-![Dashboard](screenshots/petrol-dashboard.png)
+![Dashboard](screenshots/petrol_dashboard.png)
 
 ---
 
