@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <%- include('commonHeadElements.html') %>
+
+</head>
+<style>
+@media print {
+    .no-print, .pagination, #searchInput {
+        display:none !important;
+    }
+    body {
+        font-size:12px;
+    }
+}
+</style>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+                        <pre style="background:#111;color:#0f0;padding:15px;font-size:12px;">
+            DEBUG inventoryAdjustments:
+            <%= JSON.stringify(inventoryAdjustments, null, 2) %>
+
+            </pre>
+                        <!-- Page Content -->
+                        <div class="dashboard-header">
+                            <h1>💰 Financial Reports</h1>
+                            <p>View and manage financial data and reports.</p>
+                        </div>
+                        <div class="card-box">
+                            <h2 class="mb-4">Financial Reports</h2>
+
+                            <form action="ifinance" method="get" class="row g-3">
+                                <!-- Date Range -->
+                                <div class="col-md-6">
+                                    <label for="from" class="form-label fw-bold">From Date</label>
+                                    <input type="date" name="from" class="form-control" value="<%= from || '' %>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="to" class="form-label fw-bold">To Date</label>
+                                    <input type="date" name="to" class="form-control" value="<%= to || '' %>">
+                                </div>
+
+                                <!-- Nozzle Filter -->
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <% if(f1) { %>
+                                            <input type="checkbox" name="f1" value="1" class="form-check-input" id="f1"
+                                                checked>
+                                            <% } else { %>
+                                                <input type="checkbox" name="f1" value="1" class="form-check-input"
+                                                    id="f1">
+                                                <% } %>
+                                                    <label for="f1" class="form-check-label fw-bold">Nozzle-Wise</label>
+                                    </div>
+                                    <select name="nozzle" class="form-select mt-2">
+                                        <% if (Array.isArray(nozzleCountResult) && nozzleCountResult.length) { %>
+                                            <% nozzleCountResult.forEach((nozzle)=> { %>
+                                                <% if(nozzle==nozzle.NOZZLE_NUMBER) { %>
+                                                    <option value="<%= nozzle.NOZZLE_NUMBER %>" selected>
+                                                        <%= nozzle.NOZZLE_NUMBER %>
+                                                    </option>
+                                                    <% } else { %>
+                                                        <option value="<%= nozzle.NOZZLE_NUMBER %>">
+                                                            <%= nozzle.NOZZLE_NUMBER %>
+                                                        </option>
+                                                        <% } %>
+                                                            <% }); %>
+                                                                <% } %>
+                                    </select>
+                                </div>
+
+                                <!-- Supervisor Filter -->
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <% if(f2) { %>
+                                            <input type="checkbox" name="f2" value="1" class="form-check-input" id="f2"
+                                                checked>
+                                            <% } else { %>
+                                                <input type="checkbox" name="f2" value="1" class="form-check-input"
+                                                    id="f2">
+                                                <% } %>
+                                                    <label for="f2"
+                                                        class="form-check-label fw-bold">Supervisor-Wise</label>
+                                    </div>
+                                    <select name="supervisor" class="form-select mt-2">
+                                        <% if (Array.isArray(availablePersonResult) && availablePersonResult.length) {
+                                            %>
+                                            <% availablePersonResult.forEach((person)=> { %>
+                                                <% if(person.TYPE=='SUPERVISOR' ) { %>
+                                                    <% if(supervisor==person.FNAME) {%>
+                                                        <option value="<%= person.FNAME %>" selected>
+                                                            <%= person.FNAME %>
+                                                        </option>
+                                                        <% } else { %>
+                                                            <option value="<%= person.FNAME %>">
+                                                                <%= person.FNAME %>
+                                                            </option>
+                                                            <% } %>
+                                                                <% } %>
+                                                                    <% }); %>
+                                                                        <% } %>
+                                    </select>
+                                </div>
+
+                                <!-- DSM Filter -->
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <% if(f3) { %>
+                                            <input type="checkbox" name="f3" value="1" class="form-check-input" id="f3"
+                                                checked>
+                                            <% } else { %>
+                                                <input type="checkbox" name="f3" value="1" class="form-check-input"
+                                                    id="f3">
+                                                <% } %>
+                                                    <label for="f3" class="form-check-label fw-bold">DSM-Wise</label>
+                                    </div>
+                                    <select name="dsm" class="form-select mt-2">
+                                        <% if (Array.isArray(availablePersonResult) && availablePersonResult.length) {
+                                            %>
+                                            <% availablePersonResult.forEach((person)=> { %>
+                                                <% if(person.TYPE=='DSM' ) { %>
+                                                    <% if(dsm==person.FNAME) {%>
+                                                        <option value="<%= person.FNAME %>" selected>
+                                                            <%= person.FNAME %>
+                                                        </option>
+                                                        <% } else { %>
+                                                            <option value="<%= person.FNAME %>">
+                                                                <%= person.FNAME %>
+                                                            </option>
+                                                            <% } %>
+                                                                <% } %>
+                                                                    <% }); %>
+                                                                        <% } %>
+                                    </select>
+                                </div>
+
+                                <!-- Payment Mode Filter -->
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <% if(f4) { %>
+                                            <input type="checkbox" name="f4" value="1" class="form-check-input" id="f4"
+                                                checked>
+                                            <% } else { %>
+                                                <input type="checkbox" name="f4" value="1" class="form-check-input"
+                                                    id="f4">
+                                                <% } %>
+                                                    <label for="f4" class="form-check-label fw-bold">Mode Of
+                                                        Payment-Wise</label>
+                                    </div>
+                                    <select name="mode" class="form-select mt-2">
+                                        <% if (Array.isArray(paymentModes) && paymentModes.length) { %>
+                                            <% paymentModes.forEach((modeItem)=> { %>
+                                                <% if(mode==modeItem.MODE) {%>
+                                                    <option value="<%= modeItem.MODE %>" selected>
+                                                        <%= modeItem.MODE %>
+                                                    </option>
+                                                    <% } else { %>
+                                                        <option value="<%= modeItem.MODE %>">
+                                                            <%= modeItem.MODE %>
+                                                        </option>
+                                                        <% } %>
+                                                            <% }); %>
+                                                                <% } %>
+                                    </select>
+                                </div>
+
+                                <!-- Fuel Type Filter -->
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <% if(f5) { %>
+                                            <input type="checkbox" name="f5" value="1" class="form-check-input" id="f5"
+                                                checked>
+                                            <% } else { %>
+                                                <input type="checkbox" name="f5" value="1" class="form-check-input"
+                                                    id="f5">
+                                                <% } %>
+                                                    <label for="f5" class="form-check-label fw-bold">Fuel
+                                                        Type-Wise</label>
+                                    </div>
+                                    <select name="type" class="form-select mt-2">
+                                        <% if (Array.isArray(tankType) && tankType.length) { %>
+                                            <% tankType.forEach((tank)=> { %>
+                                                <% if(type==tank.TYPE) {%>
+                                                    <option value="<%= tank.TYPE %>" selected>
+                                                        <%= tank.TYPE %>
+                                                    </option>
+                                                    <% } else { %>
+                                                        <option value="<%= tank.TYPE %>">
+                                                            <%= tank.TYPE %>
+                                                        </option>
+                                                        <% } %>
+                                                            <% }); %>
+                                                                <% } %>
+                                    </select>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-filter"></i> Apply Filters
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card-box mb-4">
+    <h4>💼 Reconciliation</h4>
+
+    <% 
+        let totalSales = dsmDetails1.reduce((s,r)=>s+Number(r.SALE||0),0);
+        let totalCollection = dsmDetails1.reduce((s,r)=>s+Number(r.AMOUNT||0),0);
+        let difference = totalCollection - totalSales;
+    %>
+
+    <p>
+        <strong>Difference:</strong>
+        <% if(difference === 0){ %>
+            <span class="text-success">Perfect Match ✅</span>
+        <% } else if(difference > 0){ %>
+            <span class="text-warning">Excess ₹ <%= difference.toFixed(2) %></span>
+        <% } else { %>
+            <span class="text-danger">Short ₹ <%= Math.abs(difference).toFixed(2) %></span>
+        <% } %>
+    </p>
+</div>
+                        <button type="button" onclick="window.print()" class="btn btn-info"
+                            style="margin-left: 10px;">🖨️ Print Report</button>
+                        </p>
+                        <div class="card-box">
+                            <h2 class="mb-3">Financial Reports</h2>
+
+                            <!-- Search Input -->
+                            <div class="mb-3">
+                                <input type="text" id="searchInput" class="form-control"
+                                    placeholder="Search reports...">
+                            </div>
+                            <div class="finance-summary card-box mb-4">
+                                <h3 class="mb-3">📊 Financial Summary</h3>
+
+                                <div class="row text-center">
+
+                                    <div class="col-md-3">
+                                        <div class="summary-box bg-primary text-white">
+                                            <h5>Total Sales</h5>
+                                            <h3>
+                                                ₹ <%= dsmDetails1.reduce((s,r)=>s+Number(r.SALE||0),0).toFixed(2) %>
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="summary-box bg-success text-white">
+                                            <h5>Total Collection</h5>
+                                            <h3>
+                                                ₹ <%= dsmDetails1.reduce((s,r)=>s+Number(r.AMOUNT||0),0).toFixed(2) %>
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="summary-box bg-warning text-dark">
+                                            <h5>Cash Collection</h5>
+                                            <h3>
+                                                ₹ <%= dsmDetails1 .filter(r=>r.MODE==='CASH')
+                                                    .reduce((s,r)=>s+Number(r.AMOUNT||0),0).toFixed(2) %>
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="summary-box bg-info text-white">
+                                            <h5>Digital Collection</h5>
+                                            <h3>
+                                                ₹ <%= dsmDetails1 .filter(r=>r.MODE!=='CASH')
+                                                    .reduce((s,r)=>s+Number(r.AMOUNT||0),0).toFixed(2) %>
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="card-box mt-4">
+
+    <ul class="nav nav-tabs" id="financeTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fuelTab" type="button">
+                ⛽ Fuel Collections
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#purchaseTab" type="button">
+                🛢 Fuel Purchase
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#posTab" type="button">
+                🛒 POS Sales
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#adjustTab" type="button">
+                🔄 Adjustments
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="fuelTab">
+
+    <h5>Fuel Shift Collections</h5>
+                            <table class="table align-middle" id="financeTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Supervisor</th>
+                                        <th>DSM</th>
+                                        <th>Nozzle</th>
+                                        <th>Fuel</th>
+                                        <th>Sales (₹)</th>
+                                        <th>Mode</th>
+                                        <th>Collection (₹)</th>
+                                    </tr>
+                                </thead>
+                           <tbody>
+<% if (Array.isArray(filteredFuel) && filteredFuel.length) { %>
+    <% filteredFuel.forEach(r => { %>
+        <tr>
+            <td><%= new Date(r.START_TIME).toLocaleDateString() %></td>
+            <td><%= r.SUPERVISOR %></td>
+            <td><%= r.DSM %></td>
+            <td><%= r.NOZZLE_NUMBER %></td>
+            <td><%= r.TYPE %></td>
+            <td class="text-end"><%= Number(r.SALE||0).toFixed(2) %></td>
+            <td><%= r.MODE %></td>
+            <td class="text-end"><%= Number(r.AMOUNT||0).toFixed(2) %></td>
+        </tr>
+    <% }) %>
+<% } else { %>
+    <tr>
+        <td colspan="8" class="text-center text-muted">
+            No records found
+        </td>
+    </tr>
+<% } %>
+</tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td colspan="5" class="text-end">Grand Total</td>
+                                        <td class="text-end">
+                                            ₹ <%= dsmDetails1.reduce((s,r)=>s+Number(r.SALE||0),0).toFixed(2) %>
+                                        </td>
+                                        <td></td>
+                                        <td class="text-end">
+                                            ₹ <%= dsmDetails1.reduce((s,r)=>s+Number(r.AMOUNT||0),0).toFixed(2) %>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+</div>
+<div class="tab-pane fade" id="purchaseTab">
+
+    <h5>Fuel Purchase (Stock In)</h5>
+
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Fuel Type</th>
+                <th class="text-end">Quantity</th>
+                <th class="text-end">Rate</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (Array.isArray(purchases) && purchases.length) { %>
+                <% purchases.forEach(p => { %>
+                    <tr>
+                        <td><%= new Date(p.TRANSACTION_DATE).toLocaleDateString() %></td>
+                        <td><%= p.PRODUCT_TYPE %></td>
+                        <td class="text-end"><%= p.QTY %></td>
+                        <td class="text-end"><%= p.RATE %></td>
+                        <td class="text-end"><%= p.AMOUNT.toFixed(2) %></td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+
+</div>
+<div class="tab-pane fade" id="posTab">
+
+    <h5>POS Sales (Non-Fuel)</h5>
+
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (Array.isArray(posSales) && posSales.length) { %>
+                <% posSales.forEach(p => { %>
+                    <tr>
+                        <td>    <%= new Date(p.CREATED_AT).toLocaleDateString() %>
+</td>
+                        <td><%= p.PRODUCT_NAME %></td>
+                        <td class="text-end"><%= p.QTY %></td>
+                        <td class="text-end">  <%= (p.AMOUNT ? Number(p.AMOUNT).toFixed(2) : '0.00') %>
+</td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+
+</div>
+<div class="tab-pane fade" id="adjustTab">
+
+    <h5>Inventory Adjustments</h5>
+
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Fuel</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Rate</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (Array.isArray(inventoryAdjustments) && inventoryAdjustments.length) { %>
+                <% inventoryAdjustments.forEach(a => { %>
+                    <tr>
+                        <td><%= new Date(a.TRANSACTION_DATE).toLocaleDateString() %></td>
+                        <td><%= a.PRODUCT_TYPE %></td>
+                        <td class="text-end"><%= a.QTY %></td>
+                        <td class="text-end"><%= a.RATE %></td>
+                        <td class="text-end"><%= a.AMOUNT.toFixed(2) %></td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+
+</div>
+                   </div>
+</div>         <!-- Pagination Nav -->
+                            <nav aria-label="Finance pagination">
+                                <ul class="pagination justify-content-center" id="financePagination"></ul>
+                            </nav>
+                        </div>
+                        </form>
+                </div>
+        </div>
+        </div>
+        <script>
+
+            // Search functionality
+            $('#searchInput').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+                $('#financeTable tbody tr').filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        </script>
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                <script>
+                    // Sidebar functionality
+
+
+                    // Close sidebar when clicking outside on mobile
+document.addEventListener('DOMContentLoaded', function () {
+                        // Pagination and search functionality for finance table
+                        const rowsPerPage = 8;
+                        const table = document.getElementById('financeTable');
+                        const searchInput = document.getElementById('searchInput');
+                        const pagination = document.getElementById('financePagination');
+                        const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+                        function renderPage(page, filteredRows) {
+                            rows.forEach(r => r.style.display = 'none');
+                            filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).forEach(r => r.style.display = 'table-row');
+                        }
+
+                        function renderPagination(filteredRows) {
+                            pagination.innerHTML = '';
+                            const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+                            if (pageCount <= 1) return;
+
+                            for (let i = 1; i <= pageCount; i++) {
+                                const li = document.createElement('li');
+                                li.className = 'page-item';
+                                const a = document.createElement('a');
+                                a.className = 'page-link';
+                                a.href = '#';
+                                a.textContent = i;
+                                a.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    renderPage(i, filteredRows);
+                                    document.querySelectorAll('#financePagination .page-link').forEach(el => el.parentElement.classList.remove('active'));
+                                    a.parentElement.classList.add('active');
+                                });
+                                li.appendChild(a);
+                                pagination.appendChild(li);
+                            }
+
+                            if (pageCount > 0) {
+                                pagination.querySelector('.page-item a').parentElement.classList.add('active');
+                            }
+                        }
+
+                        function filterRows() {
+                            const query = searchInput.value.toLowerCase();
+                            const filtered = rows.filter(r => r.innerText.toLowerCase().indexOf(query) !== -1);
+                            renderPagination(filtered);
+                            renderPage(1, filtered);
+                        }
+
+                        searchInput.addEventListener('input', filterRows);
+                        filterRows();
+                    });
+                </script>
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

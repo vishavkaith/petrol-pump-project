@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if (currentUser) { %>
+
+        <div class="dashboard-container">
+            <%- include('sidebar') %>
+
+                <div id="main">
+                    <%- include('userdropdown') %>
+
+                        <div class="dashboard-header">
+                            <h1>🚚 Transport</h1>
+                            <p>Manage transport entries</p>
+                        </div>
+
+                        <div class="card-box">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Vehicle No</th>
+                                        <th>Driver</th>
+                                        <th>Phone</th>
+                                        <th width="120">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (transportDetails.length) { %>
+                                        <% transportDetails.forEach(t=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= t.NAME %>
+                                                </td>
+                                                <td>
+                                                    <%= t.VEHICLE_NUMBER || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.DRIVER_NAME || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.PHONE || '-' %>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                                        data-bs-target="#editTransportModal" data-id="<%= t.ID %>"
+                                                        data-name="<%= t.NAME %>"
+                                                        data-vehicle="<%= t.VEHICLE_NUMBER || '' %>"
+                                                        data-driver="<%= t.DRIVER_NAME || '' %>"
+                                                        data-phone="<%= t.PHONE || '' %>">
+                                                        Edit
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="4" class="text-center">No transport records</td>
+                                                    </tr>
+                                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-box mt-3">
+                            <h4>Add Transport</h4>
+                            <form method="post" action="/app/transport">
+                                <input type="hidden" name="tp" value="1">
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <input name="name" class="form-control" placeholder="Transport Name" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input name="vehicle_number" class="form-control" placeholder="Vehicle Number">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input name="driver_name" class="form-control" placeholder="Driver Name">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input name="phone" class="form-control" placeholder="Phone">
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-success mt-3">Add Transport</button>
+                            </form>
+                        </div>
+                </div>
+        </div>
+        <!-- ===========================
+     EDIT TRANSPORT MODAL
+=========================== -->
+        <div class="modal fade" id="editTransportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <form method="post" action="/app/transport" class="modal-content">
+                    <input type="hidden" name="tp" value="2">
+                    <input type="hidden" name="id" id="edit_id">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Transport</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Transport Name</label>
+                            <input type="text" name="name" id="edit_name" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Vehicle Number</label>
+                            <input type="text" name="vehicle_number" id="edit_vehicle" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Driver Name</label>
+                            <input type="text" name="driver_name" id="edit_driver" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                <script>
+                    const editModal = document.getElementById('editTransportModal');
+
+                    editModal.addEventListener('show.bs.modal', function (event) {
+                        const btn = event.relatedTarget;
+
+                        document.getElementById('edit_id').value = btn.getAttribute('data-id');
+                        document.getElementById('edit_name').value = btn.getAttribute('data-name');
+                        document.getElementById('edit_vehicle').value = btn.getAttribute('data-vehicle');
+                        document.getElementById('edit_driver').value = btn.getAttribute('data-driver');
+                        document.getElementById('edit_phone').value = btn.getAttribute('data-phone');
+                    });
+                </script>
+
+
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

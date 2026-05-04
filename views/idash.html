@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+
+                        <!-- Dashboard Header -->
+                        <div class="dashboard-header">
+                            <h1>🏢 Petrol Pump Dashboard</h1>
+                            <p>Welcome to your comprehensive petrol pump management system. Monitor operations, manage
+                                inventory, and track financials all in one place.</p>
+                        </div>
+
+                        <!-- Navigation Menu -->
+                        <div class="nav-menu">
+                            <h2>📋 Quick Actions</h2>
+                            <div class="nav-links">
+                                <a href="/app/pos-index">🛒 Point of Sale</a>
+                                <a href="/app/pos-all-bills">📑 Sales Register</a>
+                                <a href="/app/ishift">📅 Manage Shifts</a>
+                                <a href="/app/iemployee">👥 Employee Management</a>
+                                <a href="/app/itank">🛢️ Tank Monitoring</a>
+                                <a href="/app/iproduct">📦 Product Inventory</a>
+                                <a href="/app/ifinance">💰 Financial Reports</a>
+                                <a href="/app/report">📊 Generate Reports</a>
+                                <a href="/app/ischedule">📋 Schedule Planning</a>
+                                <a href="/app/inozzle">🔌 Nozzle Settings</a>
+                                <a href="/app/icollectionmode">💳 Payment Methods</a>
+                                <a href="/app/icredit">💳 Credit Management</a>
+                                <a href="/app/fuelReceipt">⛽ Fuel Transactions</a>
+                                <a href="/app/reminder">🔔 Reminder</a>
+                                <a href="/app/inventory-adjustment">📦 Inventory Adjustment</a>
+
+                            </div>
+                        </div>
+
+                        <!-- Welcome Message -->
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h3>🎯 System Overview</h3>
+                            <p>Your petrol pump management system is fully operational. Use the sidebar navigation or
+                                quick action buttons above to access different modules.</p>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                                <div
+                                    style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h4>📊 Operations</h4>
+                                    <p>Monitor daily operations and performance metrics</p>
+                                </div>
+                                <div
+                                    style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h4>💰 Finance</h4>
+                                    <p>Track revenue, expenses, and financial reports</p>
+                                </div>
+                                <div
+                                    style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h4>👥 Staff</h4>
+                                    <p>Manage employees and shift schedules</p>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+
+        <script>
+            function openNav() {
+                document.getElementById("mySidenav").style.width = "280px";
+                document.getElementById("main").style.marginLeft = "280px";
+            }
+
+            function closeNav() {
+                document.getElementById("mySidenav").style.width = "0";
+                document.getElementById("main").style.marginLeft = "0";
+            }
+
+            // Auto-hide sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById("mySidenav").style.width = "0";
+                document.getElementById("main").style.marginLeft = "0";
+            }
+        </script>
+
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

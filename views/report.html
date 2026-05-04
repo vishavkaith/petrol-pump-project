@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+
+                    <div class="dropdown">
+
+                        <%- include('userdropdown') %>
+
+                    </div>
+
+                    <!-- Page Content -->
+                    <div class="dashboard-header">
+              
+                        <h1>📊 Reports</h1>
+                        <p>View detailed reports for shifts.</p>
+                    </div>
+
+                    <div
+                        style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <% if(msg){ %>
+                            <h1 align="center" style="color: red;">
+                                <%= msg %>
+                            </h1>
+                            <% } else {%>
+                                <h1>Shift Report</h1>
+                                <button type="button" onclick="window.print()" class="btn btn-info"
+                                    style="margin-bottom: 10px;">🖨️ Print Report</button>
+                                <div>
+                                    <div>
+                                        <h2>Shift Details</h2>
+                                        <table border="5" align="center" class="table table-striped">
+                                            <th>Shift Type</th>
+                                            <td>
+                                                <%= shiftDetailsResult.SHIFT_TYPE %>
+                                            </td>
+                                            <th>Date</th>
+                                            <td>
+                                                <%= shiftDetailsResult.DATE.toString().substring(0,24) %>
+                                            </td>
+                                            <th>Supervisor</th>
+                                            <td>
+                                                <%= shiftDetailsResult.SUPERVISOR %>
+                                            </td>
+                                        </table>
+                                    </div>
+                                    <br>
+                                    <div>
+                                        <h2>Electronic Totalizer</h2>
+                                        <table border="5" align="center" class="table table-striped">
+                                            <th>Nozzle</th>
+                                            <th>Product</th>
+                                            <th>Assigned To</th>
+                                            <th>Digital Opening Reading</th>
+                                            <th>Digital CLosing Reading</th>
+                                            <th>Pump Test</th>
+                                            <th>Sale</th>
+                                            <% elecTotalizerResult.forEach((totalizer, i)=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= totalizer.NOZZLE %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.PRODUCT %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.ASSIGNTED_TO %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.DOR %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.DCR %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.PUMP_TEST %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.SALE %>
+                                                    </td>
+
+                                                </tr>
+                                                <% }); %>
+                                                    <% elecTotalizerResult1.forEach((totalizer, i)=> { %>
+                                                        <tr>
+                                                            <td colspan="4">TOTAL&nbsp;<%= totalizer.PRODUCT %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.DISP %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.PUMPTEST %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.SALE %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </table>
+                                    </div>
+                                    <br>
+                                    <div>
+                                        <h2>Manual Totalizer</h2>
+                                        <table border="5" align="center" class="table table-striped">
+                                            <th>Nozzle</th>
+                                            <th>Product</th>
+                                            <th>Assigned To</th>
+                                            <th>Analog Opening Reading</th>
+                                            <th>Analog CLosing Reading</th>
+                                            <th>Pump Test</th>
+                                            <th>Sale</th>
+                                            <% manTotalizerResult.forEach((totalizer, i)=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= totalizer.NOZZLE %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.PRODUCT %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.ASSIGNTED_TO %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.AOR %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.ACR %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.PUMP_TEST %>
+                                                    </td>
+                                                    <td>
+                                                        <%= totalizer.SALE %>
+                                                    </td>
+
+                                                </tr>
+                                                <% }); %>
+                                                    <% manTotalizerResult1.forEach((totalizer, i)=> { %>
+                                                        <tr>
+                                                            <td colspan="4">TOTAL&nbsp;<%= totalizer.PRODUCT %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.DISP %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.PUMPTEST %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.SALE %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </table>
+                                    </div>
+
+                                    <div>
+                                        <h2>Difference Between Electronic and Manual Sale</h2>
+                                        <table border="5" align="center" class="table table-striped">
+                                            <th>Product</th>
+                                            <th>Pump Test</th>
+                                            <th>Difference</th>
+                                            <% emdiffResult.forEach((diff, i)=> {%>
+                                                <tr>
+                                                    <td>
+                                                        <%= diff.PRODUCT %>
+                                                    </td>
+                                                    <td>
+                                                        <%= diff.PUMPTEST %>
+                                                    </td>
+                                                    <td>
+                                                        <%= Math.abs(diff.DIFFERENCE) %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                        </table>
+                                    </div>
+                                    <div>
+
+                                        <h2>Tank Data</h2>
+                                        <table border="5" align="center" class="table table-striped">
+                                            <th>Tank Name</th>
+                                            <th>Opening Dip</th>
+                                            <th>Opening Volume</th>
+                                            <th>Closing Dip</th>
+                                            <th>Closing Volume</th>
+                                            <th>Sold Out</th>
+                                            <% tankheightResult2.forEach((tank, i)=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= tank.TYPE %>
+                                                    </td>
+                                                    <td>
+                                                        <%= tank.OPEN_READING %>
+                                                    </td>
+                                                    <td>
+                                                        <%= tank.OPEN %>
+                                                    </td>
+                                                    <td>
+                                                        <%= tankheightResult1[i].CLOSE_READING %>
+                                                    </td>
+                                                    <td>
+                                                        <%= tankheightResult1[i].CLOSE %>
+                                                    </td>
+                                                    <td>
+                                                        <%= tank.OPEN - tankheightResult1[i].CLOSE %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                        </table>
+                                    </div>
+                                    <% if (adjustmentResult && adjustmentResult.length> 0) { %>
+
+                                        <h4>Inventory Adjustments</h4>
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Total Adjustment</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% adjustmentResult.forEach(row=> { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= row.PRODUCT_TYPE %>
+                                                        </td>
+                                                        <td>
+                                                            <%= row.TOTAL_ADJUSTMENT %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                            </tbody>
+                                        </table>
+
+                                        <% } %>
+                                            <h4>Non-Fuel POS Summary</h4>
+
+                                            <table class="table table-bordered">
+                                                <tr>
+                                                    <th>Total Bills</th>
+                                                    <th>Total POS Sale</th>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <%= posData.TOTAL_BILLS %>
+                                                    </td>
+                                                    <td>
+                                                        <%= posData.POS_TOTAL %>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <div>
+                                                <h2>Difference Between TANK SALE and METERED SALE </h2>
+                                                <table border="5" align="center" class="table table-striped">
+                                                    <th>Tank Name</th>
+                                                    <th>Qty by Totalizer</th>
+                                                    <th>Qty by Tank</th>
+                                                    <th>Loss(-)/Gain(+)</th>
+                                                    <th>Amount</th>
+                                                    <% elecTotalizerResult1.forEach((totalizer, i)=> { %>
+                                                        <tr>
+                                                            <td>
+                                                                <%= totalizer.PRODUCT %>
+                                                            </td>
+                                                            <td>
+                                                                <%= totalizer.SALE %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= ((tankheightResult2[i] && tankheightResult2[i].OPEN)
+                                                                    || 0) - ((tankheightResult1[i] &&
+                                                                    tankheightResult1[i].CLOSE) || 0) %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= (totalizer.SALE || 0) - ( ((tankheightResult2[i] &&
+                                                                    tankheightResult2[i].OPEN) || 0) -
+                                                                    ((tankheightResult1[i] &&
+                                                                    tankheightResult1[i].CLOSE) || 0) ) %>
+                                                            </td>
+
+                                                            <td>
+                                                                <%= ( (totalizer.SALE || 0) - ( ((tankheightResult2[i]
+                                                                    && tankheightResult2[i].OPEN) || 0) -
+                                                                    ((tankheightResult1[i] &&
+                                                                    tankheightResult1[i].CLOSE) || 0) ) ) *
+                                                                    ((priceResult[i] && priceResult[i].PRICE) || 0) %>
+                                                            </td>
+
+                                                        </tr>
+
+                                                        <% }); %>
+                                                </table>
+                                            </div>
+
+
+                                            <div>
+                                                <h2>Sale Mode Wise</h2>
+                                                <table border="5" align="center" class="table table-striped">
+                                                    <th>NOZZLE NUMBER</th>
+                                                    <th>ASSIGNED_TO</th>
+                                                    <th>Mode Of Payment</th>
+                                                    <th>Amount</th>
+                                                    <% actResult.forEach((act, i)=> { %>
+                                                        <tr>
+                                                            <td>
+                                                                <%= act.NOZZLE_NUMBER %>
+                                                            </td>
+                                                            <td>
+                                                                <%= act.FNAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= act.MODE %>
+                                                            </td>
+                                                            <td>
+                                                                <%= act.AMOUNT %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </table>
+                                            </div>
+                                            <div>
+                                                <h2>Report</h2>
+                                                <table border="5" align="center" class="table table-striped">
+                                                    <th>Nozzle Number</th>
+                                                    <th>Assigned to</th>
+                                                    <th>Product</th>
+                                                    <th>Sale</th>
+                                                    <th>Estimated Collection</th>
+                                                    <th>Actual Collection</th>
+                                                    <th>Shortage</th>
+                                                    <% estResult.forEach((est, i)=> { %>
+                                                        <tr>
+                                                            <td>
+                                                                <%= est.NOZZLE_NUMBER %>
+                                                            </td>
+                                                            <td>
+                                                                <%= est.ASSIGNED_TO %>
+                                                            </td>
+                                                            <td>
+                                                                <%= est.TYPE %>
+                                                            </td>
+                                                            <td>
+                                                                <%= est.SALE %>
+                                                            </td>
+                                                            <td>
+                                                                <%= est.COLLECTION %>
+                                                            </td>
+                                                            <td>
+                                                                <%= actResult1[i].COLLECTION %>
+                                                            </td>
+                                                            <td>
+                                                                <%= actResult1[i].COLLECTION-est.COLLECTION %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </table>
+                                            </div>
+                                </div>
+                                <% } %>
+                    </div>
+                </div>
+        </div>
+
+
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                <%- include('commonFooterScriptElements.html') %>
+</body>
+
+</html>

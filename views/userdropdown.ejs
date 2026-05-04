@@ -1,0 +1,134 @@
+<!-- User Profile Dropdown -->
+<div class="dropdown">
+    <button class="dropbtn">
+        <img src="<%= '/static/uploads/'+currentUser[0].PIC %>" alt="Profile" class="profile-avatar">
+        👤 <%= 'Hi, '+currentUser[0].FNAME %>
+        <span id="reminder-count" style="display: none; background: #ff6b6b; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; margin-left: 5px;"></span>
+        <span style="font-size: 12px;">&#9660;</span>
+    </button>
+    <div class="dropdown-content">
+        <div class="dropdown-header">
+            <img src="<%= '/static/uploads/'+currentUser[0].PIC %>" alt="Profile" class="dropdown-avatar">
+            <div class="user-info">
+                <strong><%= currentUser[0].FNAME %> <%= currentUser[0].LNAME %></strong>
+                <small class="text-muted"><%= currentUser[0].ROLE || 'User' %></small>
+            </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="/app/profile" class="dropdown-item">
+            <i class="fas fa-user"></i> Profile Settings
+        </a>
+        <a href="#" id="show-reminders-link" class="dropdown-item">
+            <i class="fas fa-bell"></i> Show Reminders
+        </a>
+        <a href="/app/logout" class="dropdown-item logout-item">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Global Reminder Slider -->
+<div id="global-reminder-slider" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff3cd; border-top: 2px solid #ffeeba; padding: 10px; z-index: 1000; box-shadow: 0 -2px 4px rgba(0,0,0,0.1); max-height: 150px; overflow-y: auto;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                <strong>🔔 Upcoming Reminders:</strong>
+                <div id="global-reminder-list" style="margin-top: 5px;"></div>
+            </div>
+            <div class="col-md-2 text-right">
+                <button id="close-global-reminder" class="btn btn-sm btn-warning">×</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadReminderCount() {
+    try {
+        const response = await fetch('/app/reminder/active');
+        const reminders = await response.json();
+
+        const countElement = document.getElementById('reminder-count');
+        if (countElement && reminders.length > 0) {
+            countElement.textContent = reminders.length;
+            countElement.style.display = 'inline-block';
+        } else if (countElement) {
+            countElement.style.display = 'none';
+        }
+
+        // Also update global reminder slider
+        updateGlobalReminderSlider(reminders);
+    } catch (error) {
+        console.error('Error loading reminder count:', error);
+    }
+}
+
+function updateGlobalReminderSlider(reminders) {
+    const slider = document.getElementById("global-reminder-slider");
+    const listDiv = document.getElementById("global-reminder-list");
+
+    if (!slider || !listDiv) return;
+
+    if (reminders.length > 0) {
+        // Clear previous content
+        listDiv.innerHTML = '';
+
+        // Show all active reminders
+        reminders.forEach(reminder => {
+            const reminderItem = document.createElement('div');
+            reminderItem.style.marginBottom = '3px';
+            reminderItem.style.fontSize = '13px';
+
+            const date = new Date(reminder.REMINDER_DATE).toLocaleDateString();
+            reminderItem.innerHTML = `<strong>${date}:</strong> ${reminder.TASK}`;
+            listDiv.appendChild(reminderItem);
+        });
+
+        slider.style.display = "block";
+        updateGlobalReminderPosition();
+    } else {
+        slider.style.display = "none";
+    }
+}
+
+function updateGlobalReminderPosition() {
+    const sidenav = document.getElementById("mySidenav");
+    const slider = document.getElementById("global-reminder-slider");
+    if (sidenav && slider) {
+        const isOpen = sidenav && sidenav.style.width === "280px";
+        slider.style.left = isOpen ? "280px" : "0";
+    }
+}
+
+// Close global reminder slider
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('close-global-reminder');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            const slider = document.getElementById('global-reminder-slider');
+            if (slider) {
+                slider.style.display = 'none';
+            }
+        });
+    }
+
+    // Show reminders link
+    const showRemindersLink = document.getElementById('show-reminders-link');
+    if (showRemindersLink) {
+        showRemindersLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadReminderCount(); // This will show the slider if there are reminders
+        });
+    }
+
+    // Update position when sidebar changes
+    const observer = new MutationObserver(updateGlobalReminderPosition);
+    const sidenav = document.getElementById("mySidenav");
+    if (sidenav) {
+        observer.observe(sidenav, { attributes: true, attributeFilter: ['style'] });
+    }
+
+    // Load reminders
+    loadReminderCount();
+});
+</script>

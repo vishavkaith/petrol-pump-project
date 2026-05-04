@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+
+                        <!-- Page Content -->
+                        <div class="dashboard-header">
+                            <h1>👤 Profile Settings</h1>
+                            <p>Manage your account information and preferences.</p>
+                        </div>
+
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h2>Personal Information</h2>
+                            <form action="/app/profile" method="post">
+                                <div class="form-group">
+                                    <label for="fname">First Name:</label>
+                                    <input type="text" name="fname" class="form-control" value="<%= user.FNAME %>"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lname">Last Name:</label>
+                                    <input type="text" name="lname" class="form-control" value="<%= user.LNAME %>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone:</label>
+                                    <input type="text" name="phone" class="form-control" value="<%= user.PHONE %>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="address">Address:</label>
+                                    <textarea name="address" class="form-control"
+                                        rows="3"><%= user.ADDRESS %></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email (read-only):</label>
+                                    <input type="email" class="form-control" value="<%= user.EMAIL %>" readonly>
+                                </div>
+                                <button type="submit" class="btn btn-success">💾 Update Profile</button>
+                            </form>
+                        </div>
+
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 30px;">
+                            <h2>Account Information</h2>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>User ID:</strong>
+                                        <%= user.ID %>
+                                    </p>
+                                    <p><strong>Petrol Pump ID:</strong>
+                                        <%= user.PID %>
+                                    </p>
+                                    <p><strong>Account Status:</strong> <span class="badge badge-success">Active</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Created At:</strong>
+                                        <%= new Date(user.CREATED_AT).toLocaleDateString() %>
+                                    </p>
+                                    <p><strong>Last Login:</strong>
+                                        <%= new Date().toLocaleDateString() %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

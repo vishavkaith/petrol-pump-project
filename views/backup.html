@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+            <%- include('commonHeadElements.html') %>
+
+</head>
+<body>
+<% if(currentUser) { %>
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <%- include('sidebar') %>
+
+    <!-- Main Content -->
+    <div id="main">
+        <!-- User Profile Dropdown -->
+        <%- include('userdropdown') %>
+
+        <!-- Page Content -->
+        <div class="dashboard-header">
+            <h1>💾 Database Backup</h1>
+            <p>Import and export your database for backup purposes.</p>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h2>Export Database</h2>
+            <p>Download a backup of your current database.</p>
+            <a href="/app/backup/export" class="btn btn-primary">📥 Export Database</a>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 30px;">
+            <h2>Import Database</h2>
+            <p>Upload a database backup file to restore. <strong>Warning:</strong> This will replace your current data.</p>
+            <form action="/app/backup/import" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Select Database File:</label>
+                    <input type="file" name="file" accept=".db" required>
+                </div>
+                <button type="submit" class="btn btn-danger">📤 Import Database</button>
+            </form>
+        </div>
+
+        <% if (typeof message !== 'undefined') { %>
+        <div class="alert alert-success" style="margin-top: 20px;">
+            <%= message %>
+        </div>
+        <% } %>
+
+        <% if (typeof error !== 'undefined') { %>
+        <div class="alert alert-danger" style="margin-top: 20px;">
+            <%= error %>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+
+
+<% } else { %>
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+        <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+        <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+        <a href="/app/login" style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+    </div>
+</div>
+<% } %>
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "petrol-erp",
+  "version": "1.0.0",
+  "main": "electron-main.js",
+  "description": "Petrol Pump ERP System",
+  "author": "ITSBegin",
+  "license": "MIT",
+  "scripts": {
+    "electron": "electron .",
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "@koa/cors": "^5.0.0",
+    "better-sqlite3": "^12.6.2",
+    "ejs": "^3.1.10",
+    "electron-log": "^5.4.3",
+    "koa": "^2.15.3",
+    "koa-body": "^6.0.1",
+    "koa-cors": "^0.0.16",
+    "koa-mount": "^4.0.0",
+    "koa-router": "^12.0.1",
+    "koa-static": "^5.0.0",
+    "koa-views": "^8.1.0",
+    "uuid": "^10.0.0",
+    "winston": "^3.15.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.itsbegin.petroERP",
+    "productName": "Petrol ERP",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

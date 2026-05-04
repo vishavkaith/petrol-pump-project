@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+
+                        <!-- Reminder Slider -->
+                        <div id="reminder-slider"
+                            style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff3cd; border-top: 2px solid #ffeeba; padding: 10px; z-index: 1000; box-shadow: 0 -2px 4px rgba(0,0,0,0.1); max-height: 150px; overflow-y: auto;">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <strong>🔔 Upcoming Reminders:</strong>
+                                        <div id="reminder-list" style="margin-top: 5px;"></div>
+                                    </div>
+                                    <div class="col-md-2 text-right">
+                                        <button id="close-reminder" class="btn btn-sm btn-warning">×</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Page Content -->
+                        <div class="dashboard-header">
+                            <h1>🔔 Reminders</h1>
+                            <p>Manage your reminder tasks and notifications.</p>
+                        </div>
+
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h2>Add New Reminder</h2>
+                            <form action="/app/reminder/add" method="post">
+                                <div class="form-group">
+                                    <label for="task">Task Description:</label>
+                                    <input type="text" name="task" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reminder_date">Reminder Date:</label>
+                                    <input type="date" name="reminder_date" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">➕ Add Reminder</button>
+                            </form>
+                        </div>
+
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 30px;">
+                            <h2>Your Reminders</h2>
+                            <div class="mb-3">
+                                <input type="text" id="reminderSearchInput" class="form-control"
+                                    placeholder="Search reminders...">
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Task</th>
+                                            <th>Reminder Date</th>
+                                            <th>Created Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (Array.isArray(reminders) && reminders.length) { %>
+                                            <% reminders.forEach((reminder)=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= reminder.TASK %>
+                                                    </td>
+                                                    <td>
+                                                        <%= new Date(reminder.REMINDER_DATE).toLocaleDateString() %>
+                                                    </td>
+                                                    <td>
+                                                        <%= new Date(reminder.CREATED_DATE).toLocaleDateString() %>
+                                                    </td>
+                                                    <td>
+                                                        <% if (reminder.ACTIVE) { %>
+                                                            <span class="badge badge-success">Active</span>
+                                                            <% } else { %>
+                                                                <span class="badge badge-secondary">Disabled</span>
+                                                                <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <form action="/app/reminder/toggle" method="post"
+                                                            style="display: inline;">
+                                                            <input type="hidden" name="id" value="<%= reminder.ID %>">
+                                                            <button type="submit"
+                                                                class="btn btn-sm <%= reminder.ACTIVE ? 'btn-warning' : 'btn-success' %>">
+                                                                <%= reminder.ACTIVE ? 'Disable' : 'Enable' %>
+                                                            </button>
+                                                        </form>
+                                                        <form action="/app/reminder/delete" method="post"
+                                                            style="display: inline; margin-left: 5px;">
+                                                            <input type="hidden" name="id" value="<%= reminder.ID %>">
+                                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                                onclick="return confirm('Are you sure?')">Delete</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="5" class="text-center">No reminders found.</td>
+                                                        </tr>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <nav aria-label="Reminder pagination">
+                                <ul class="pagination justify-content-center" id="reminderPagination"></ul>
+                            </nav>
+                        </div>
+                </div>
+        </div>
+
+        <script>
+            function updateReminderPosition() {
+                const sidenav = document.getElementById("mySidenav");
+                const slider = document.getElementById("reminder-slider");
+                if (sidenav && slider) {
+                    const isOpen = sidenav.style.width === "280px";
+                    slider.style.left = isOpen ? "280px" : "0";
+                }
+            }
+
+            async function loadReminders() {
+                try {
+                    const response = await fetch('/app/reminder/active');
+                    const reminders = await response.json();
+
+                    if (reminders.length > 0) {
+                        const slider = document.getElementById("reminder-slider");
+                        const listDiv = document.getElementById("reminder-list");
+
+                        // Clear previous content
+                        listDiv.innerHTML = '';
+
+                        // Show all active reminders
+                        reminders.forEach(reminder => {
+                            const reminderItem = document.createElement('div');
+                            reminderItem.style.marginBottom = '3px';
+                            reminderItem.style.fontSize = '13px';
+
+                            const date = new Date(reminder.REMINDER_DATE).toLocaleDateString();
+                            reminderItem.innerHTML = `<strong>${date}:</strong> ${reminder.TASK}`;
+                            listDiv.appendChild(reminderItem);
+                        });
+
+                        slider.style.display = "block";
+                        updateReminderPosition();
+                    }
+                } catch (error) {
+                    console.error('Error loading reminders:', error);
+                }
+            }
+
+            document.getElementById("close-reminder").addEventListener("click", function () {
+                document.getElementById("reminder-slider").style.display = "none";
+            });
+
+            // Load reminders on page load
+            loadReminders();
+
+            // Client-side search + pagination for reminder table
+            document.addEventListener('DOMContentLoaded', function () {
+                const rowsPerPage = 8;
+                const table = document.querySelector('table.table');
+                const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
+                const pagination = document.getElementById('reminderPagination');
+                const searchInput = document.getElementById('reminderSearchInput');
+
+                function renderPage(page, filteredRows) {
+                    const start = (page - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+                    rows.forEach(r => r.style.display = 'none');
+                    filteredRows.slice(start, end).forEach(r => r.style.display = 'table-row');
+                }
+
+                function renderPagination(filteredRows) {
+                    pagination.innerHTML = '';
+                    const pageCount = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+                    for (let p = 1; p <= pageCount; p++) {
+                        const li = document.createElement('li');
+                        li.className = 'page-item';
+                        li.innerHTML = `<a class="page-link" href="#">${p}</a>`;
+                        li.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            renderPage(p, filteredRows);
+                        });
+                        pagination.appendChild(li);
+                    }
+                }
+
+                function filterRows() {
+                    const q = (searchInput.value || '').toLowerCase().trim();
+                    const filtered = rows.filter(r => r.innerText.toLowerCase().indexOf(q) !== -1);
+                    renderPagination(filtered);
+                    renderPage(1, filtered);
+                }
+
+                if (searchInput) searchInput.addEventListener('input', filterRows);
+                filterRows();
+            });
+        </script>
+
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

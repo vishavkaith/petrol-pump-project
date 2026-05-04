@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        input[type=text],
+        input[type=number] {
+            width: 50%;
+        }
+    </style>
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+                        <!-- Page Header -->
+                        <div class="dashboard-header">
+                            <h1>🛒 Product Billing</h1>
+                            <p>Add Booking</p>
+                        </div>
+<% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger">
+        <%= error %>
+    </div>
+<% } %>
+<% if (!shift) { %>
+    <div class="text-center mt-5">
+        <h4>No Active Shift</h4>
+        <a href="/app/ishift" class="btn btn-primary">
+            Open Shift
+        </a>
+    </div>
+<% } else if (!products || products.length === 0) { %>
+
+    <div class="text-center mt-5">
+        <h4>No Products Available</h4>
+        <p>Please add products before creating booking.</p>
+        <a href="/app/iproduct" class="btn btn-primary">
+            Add Product
+        </a>
+    </div>
+
+<% } else { %>
+
+                        <input type="hidden" id="shift_id" value="<%= shift.ID %>">
+                        <div class="card-box">
+                            <h2 class="mb-4">Booking</h2>
+
+                            <table border="1" class="table align-middle">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                    <th>Add</th>
+                                </tr>
+
+                                <% products.forEach(product=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= product.NAME %>
+                                        </td>
+                                        <td>
+                                            <%= product.PRICE %>
+                                        </td>
+                                        <td>
+                                            <input type="number" min="1" value="1" id="qty_<%= product.ID %>">
+                                        </td>
+                                        <td id="total_<%= product.ID %>">0</td>
+                                        <td>
+                                            <button onclick="addItem('<%= product.ID %>','<%= product.PRICE %>')"
+                                                class="btn btn-primary">
+                                                Add
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </table>
+
+                            <hr>
+
+                            <h3>Cart</h3>
+                            <ul id="cart"></ul>
+
+                            <h3>
+                                Subtotal: ₹ <span id="subtotal">0</span><br>
+                                Discount: ₹ <input type="number" id="discount" value="0"><br>
+                                Total: ₹ <span id="grand_total">0</span>
+                            </h3>
+
+                            <button onclick="submitBill()" class="btn btn-success">Generate Bill</button>
+                        </div>
+                </div>
+        </div>
+        <% } %>
+
+        <%- include('commonFooterScriptElements.html') %>
+            <script>
+                let cart = [];
+                let subtotal = 0;
+
+                function addItem(productId, price) {
+                    let qty = parseFloat(document.getElementById('qty_' + productId).value);
+                    let total = qty * price;
+
+                    cart.push({
+                        product_id: productId,
+                        qty: qty,
+                        price: price,
+                        total: total
+                    });
+
+                    subtotal += total;
+
+                    document.getElementById('subtotal').innerText = subtotal;
+
+                    calculateTotal();
+
+                    document.getElementById('cart').innerHTML +=
+                        `<li>Product ${productId} | Qty: ${qty} | ₹${total}</li>`;
+                }
+
+                function calculateTotal() {
+                    let discount = parseFloat(document.getElementById('discount').value) || 0;
+                    let grand = subtotal - discount;
+
+                    document.getElementById('grand_total').innerText = grand;
+                }
+
+                function submitBill() {
+
+                    let shiftId = document.getElementById('shift_id').value;
+                    let discount = document.getElementById('discount').value;
+                    let total = document.getElementById('grand_total').innerText;
+
+                    fetch('/app/pos-create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            shift_id: shiftId,
+                            items: JSON.stringify(cart),
+                            subtotal: subtotal,
+                            discount: discount,
+                            total: total
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            alert("Bill Generated: " + data.bill_no);
+                            location.reload();
+                        });
+                }
+
+                document.getElementById('discount').addEventListener('input', calculateTotal);
+            </script>
+
+            <% } else { %>
+                <div
+                    style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div
+                        style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                        <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                        <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                        <a href="/app/login"
+                            style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                    </div>
+                </div>
+                <% } %>
+
+                
+</body>
+
+</html>

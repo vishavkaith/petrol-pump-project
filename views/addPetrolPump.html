@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('commonHeadElements.html') %>
+    <title>Petrol Pump Creation</title>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+
+                    <h2 class="text-center mb-4 text-primary fw-bold">
+                        Petrol Pump Creation
+                    </h2>
+
+                    <% if(errormsg) { %>
+                        <div class="alert alert-danger text-center">
+                            <strong>Error in Petrol Pump Creation:</strong> <%= errormsg %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="/app/newPetrolPump" autocomplete="on" enctype="multipart/form-data">
+
+                        <!-- ================= Petrol Pump Info ================= -->
+                        <h4 class="mb-3 text-secondary border-bottom pb-2">
+                            Petrol Pump Information
+                        </h4>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label">Petrol Pump Name</label>
+                                <input type="text" name="Name" class="form-control" placeholder="Enter Name" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Registration</label>
+                                <input type="text" name="Registration" class="form-control" placeholder="Enter Registration">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Address</label>
+                                <input type="text" name="Address" class="form-control" placeholder="Enter Address">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">City</label>
+                                <input type="text" name="City" class="form-control" placeholder="Enter City">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">State</label>
+                                <input type="text" name="State" class="form-control" placeholder="Enter State">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Pincode</label>
+                                <input type="text" name="Pincode" class="form-control" placeholder="Enter Pincode">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="Phone" class="form-control" placeholder="Enter Phone">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="mail" class="form-control" placeholder="Enter Email">
+                            </div>
+
+                        </div>
+
+                        <!-- ================= Admin Info ================= -->
+                        <h4 class="mt-5 mb-3 text-secondary border-bottom pb-2">
+                            Admin Information
+                        </h4>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="fname" class="form-control" placeholder="Enter First Name" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="lname" class="form-control" placeholder="Enter Last Name">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Address</label>
+                                <input type="text" name="aaddress" class="form-control" placeholder="Enter Address">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="aphone" class="form-control" placeholder="Enter Phone Number">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="aemail" class="form-control" placeholder="Enter Email">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Adhaar</label>
+                                <input type="text" name="adhaar" class="form-control" placeholder="Enter Adhaar Number">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control" placeholder="Enter Password" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Photo</label>
+                                <input type="file" name="pic" class="form-control">
+                            </div>
+
+                        </div>
+
+                        <div class="text-center mt-5">
+                            <button type="submit" name="submit" value="submit" 
+                                    class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow">
+                                Create Account
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

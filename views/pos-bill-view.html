@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/static/styles/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/styles/dashboard.css">
+
+    <script src="/static/scripts/jquery.min.js"></script>
+    <script src="/static/scripts/bootstrap.min.js"></script>
+
+    <%- include('commonHeadElements.html') %>
+
+    <style>
+.right {
+    text-align: right;
+}
+
+/* SCREEN VIEW */
+#receipt-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+#receipt {
+    width: 350px;
+    font-family: monospace;
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* PRINT VIEW */
+@media print {
+
+    body * {
+        visibility: hidden;
+    }
+
+    #receipt, #receipt * {
+        visibility: visible;
+    }
+
+    #receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <%- include('sidebar') %>
+
+    <!-- Main Content -->
+    <div id="main">
+        <%- include('userdropdown') %>
+        <pre style="background:#111;color:#0f0;padding:15px;font-size:12px;">
+            DEBUG items:
+            <%= JSON.stringify(items, null, 2) %>
+
+            </pre>
+
+        <!-- RECEIPT -->
+        <div id="receipt-wrapper">
+            <div id="receipt">
+    <h3 style="text-align:center;">Ganga Singh & Sons
+</h3>
+    <p style="text-align:center;">Sales Receipt</p>
+    <hr>
+
+    <p>
+        Bill No: <%= bill.BILL_NO %><br>
+        Date: <%= bill.CREATED_AT %><br>
+        Cashier: <%= bill.CASHIER_NAME || bill.CASHIER_ID %>
+    </p>
+
+    <hr>
+
+    <table width="100%">
+        <tr>
+            <th>Item</th>
+            <th class="right">Qty</th>
+            <th class="right">Total</th>
+        </tr>
+
+        <% items.forEach(item => { %>
+        <tr>
+            <td><%= item.PRODUCT_NAME %></td>
+            <td class="right"><%= item.QTY %></td>
+            <td class="right">₹ <%= item.TOTAL %></td>
+        </tr>
+        <% }) %>
+    </table>
+
+    <hr>
+
+    <p>
+        Subtotal: ₹ <%= bill.SUBTOTAL %><br>
+        Discount: ₹ <%= bill.DISCOUNT %><br>
+        <b>Total: ₹ <%= bill.TOTAL %></b>
+    </p>
+
+    <hr>
+
+    <p style="text-align:center;">
+        Thank You! Visit Again
+    </p>
+
+    <% if (!printMode) { %>
+        <div class="no-print" style="text-align:center;">
+            <button onclick="window.print()" class="btn btn-primary">
+                Print
+            </button>
+        </div>
+    <% } else { %>
+        <script>
+            window.onload = function() {
+                window.print();
+            }
+        </script>
+    <% } %>
+</div>
+</div>
+</div>
+
+
+<%- include('commonFooterScriptElements.html') %>
+
+<% } else { %>
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+        <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+        <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+        <a href="/app/login" style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+    </div>
+</div>
+<% } %>
+</body>
+</html>

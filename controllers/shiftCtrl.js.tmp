@@ -1,0 +1,371 @@
+var sessionUtils = require('../utils/sessionUtils');
+var util=require('util');
+var databaseUtils=require('./../utils/databaseUtils');
+
+module.exports = {
+
+
+    showShiftpage: async (ctx) => {
+        var pid;
+try{ pid=ctx.currentUser[0].PID;}
+catch(e){pid=0;}
+
+        var queryString;
+        var query;
+        
+
+        //Show all available shifts
+        queryString='SELECT SHIFT_TYPE,TIME(STARTTIME) AS START,TIME(ENDTIME) AS END FROM SHIFT_METADATA WHERE PID=?';
+        var availableShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //Show all Available Supervisors
+        queryString='SELECT FNAME,LNAME FROM USER U,ROLE R,USER_ROLE UR WHERE U.ID=UR.USER_ID AND R.ID=UR.ROLE_ID AND U.PID=? AND R.TYPE=\'SUPERVISOR\' AND U.ACTIVE=1';
+        var availableSupervisorResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        
+        //Show all available nozzles
+        queryString='SELECT NOZZLE_NUMBER FROM NOZZLE WHERE PID=? AND ACTIVE=1';
+        var availableNozzleResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //Show all available DSM(s)
+        queryString='SELECT FNAME,LNAME FROM USER U,ROLE R,USER_ROLE UR WHERE U.ID=UR.USER_ID AND R.ID=UR.ROLE_ID AND U.PID=? AND R.TYPE=\'DSM\' AND U.ACTIVE=1';
+        var availableDSMResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //To end shift
+        queryString='SELECT NOZZLE_NUMBER,N.TYPE,U1.FNAME AS SUPERVISOR,U2.FNAME AS DSM, START_TIME,END_TIME,DOR  FROM SHIFT_NOZZLE_DSM SND,USER U1,USER U2,SHIFT S,NOZZLE N WHERE N.ID=SND.NOZZLE_ID AND SND.SHIFT_ID=S.ID AND U1.ID=S.SUPERVISOR_ID AND U2.ID=SND.USER_ID AND DCR=0 AND S.PID=?';
+        var endShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //To View Shift
+        queryString='SELECT S.ID AS ID,SM.SHIFT_TYPE, U1.FNAME AS SUPERVISOR, S.START_TIME,S.END_TIME FROM SHIFT_METADATA SM,SHIFT S,USER U1,SHIFT_NOZZLE_DSM SND WHERE SM.ID=S.SHIFT_META_DATA_ID AND S.SUPERVISOR_ID=U1.ID AND S.ID=SND.SHIFT_ID AND DCR!=0 AND S.PID=? GROUP BY S.ID';
+        var viewShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+
+        await ctx.render('shift',{
+            availableShiftResult:availableShiftResult,
+            availableSupervisorResult:availableSupervisorResult,
+            availableNozzleResult:availableNozzleResult,
+            availableDSMResult:availableDSMResult,
+            endShiftResult:endShiftResult,
+            viewShiftResult:viewShiftResult
+        });
+    },
+    
+    logout: async (ctx) => {
+        var sessionId = ctx.cookies.get("SESSION_ID");
+        if(sessionId) {
+            sessionUtils.deleteSession(sessionId);
+        }
+        ctx.cookies.set("SESSION_ID", '', {expires: new Date(1), path: '/'});
+
+        ctx.redirect('/');
+    },
+    showiShiftPage: async (ctx) => {
+
+        var pid;
+try{ pid=ctx.currentUser[0].PID;}
+catch(e){pid=0;}
+
+
+        var queryString='SELECT * FROM SHIFT_METADATA SM WHERE NOT EXISTS(SELECT ID FROM SHIFT S WHERE S.SHIFT_META_DATA_ID=SM.ID AND DATE(START_TIME)=date(\'now\')) AND PID=?';
+        var availableShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //Show all Available Supervisors/DSM
+        queryString='SELECT U.ID,FNAME,LNAME,R.TYPE AS TYPE FROM USER U,ROLE R,USER_ROLE UR WHERE U.ID=UR.USER_ID AND R.ID=UR.ROLE_ID AND U.PID=? AND (R.TYPE=\'SUPERVISOR\' OR R.TYPE=\'DSM\') AND U.ACTIVE=1';
+        var availableSupervisorResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //Show all available nozzles
+        queryString='SELECT N.ID as ID,NOZZLE_NUMBER,DCR AS DOR,ACR AS AOR FROM NOZZLE N,SHIFT_NOZZLE_DSM SND WHERE N.ID=SND.NOZZLE_ID AND PID=? AND ACTIVE=1 AND SND.SHIFT_ID=(SELECT MAX(ID) FROM SHIFT WHERE PID=?)';
+        var availableNozzleResult=await databaseUtils.executeQuery(queryString, [pid, pid]);
+
+        if(availableNozzleResult.length==0){
+            queryString='SELECT ID,NOZZLE_NUMBER,0 AS DOR,0 AS AOR FROM NOZZLE WHERE PID=?';
+            availableNozzleResult=await databaseUtils.executeQuery(queryString, [pid]);
+        }
+
+        //Query to show all available tanks(for opening reading)
+        queryString='SELECT TYPE,CLOSE_READING FROM TANK,TANK_METADATA WHERE TANK.TANK_ID=TANK_METADATA.ID AND SHIFT_ID=(SELECT MAX(SHIFT_ID) FROM TANK T,SHIFT S WHERE T.SHIFT_ID=S.ID AND S.PID=?) ORDER BY TYPE';
+        var tanksResult=await databaseUtils.executeQuery(queryString, [pid]);
+
+        if(tanksResult.length==0){
+            queryString='SELECT NAME AS TYPE,QTY AS CLOSE_READING FROM PRODUCT P,TANK_METADATA TM WHERE P.NAME=TM.TYPE AND P.PID=?';
+            tanksResult=await databaseUtils.executeQuery(queryString, [pid]);
+        }
+
+        //Query to get the first shift that should be ended
+        queryString='SELECT FNAME,LNAME,SHIFT_ID,NOZZLE_ID,USER_ID,DOR,DCR,AOR,ACR,PUMP_TEST,SELF FROM SHIFT_NOZZLE_DSM SND,USER U WHERE SND.SHIFT_ID=(SELECT SHIFT_ID FROM SHIFT_NOZZLE_DSM WHERE DCR=0 AND ACR=0 AND PID=? ORDER BY ID LIMIT 1) AND U.ID=SND.USER_ID';
+        var endShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+        
+        //Query to get all payment modes
+        queryString='SELECT MODE FROM COLLECTION_MODE WHERE PID=? ORDER BY MODE';
+        var paymentModes=await databaseUtils.executeQuery(queryString, [pid]);
+
+
+        //var tanksResult1=yield databaseUtils.executeQuery(util.format('SELECT NAME AS TYPE,QTY AS OPEN_READING FROM PRODUCT P,TANK_METADATA TM WHERE P.NAME=TM.TYPE AND P.PID=%s',pid));
+        queryString='SELECT TYPE,OPEN_READING FROM TANK,TANK_METADATA WHERE TANK.TANK_ID=TANK_METADATA.ID AND SHIFT_ID=(SELECT MAX(SHIFT_ID) FROM TANK T,SHIFT S WHERE T.SHIFT_ID=S.ID AND S.PID=?) ORDER BY TYPE';
+        var tanksResult1=await databaseUtils.executeQuery(queryString, [pid]);
+
+        //For FIlter Purpose
+        var dateactive=ctx.request.query.dateactive;
+        var countactive=ctx.request.query.countactive;
+        var from;
+        var to;
+        var count;
+        var viewShiftResult
+        if(dateactive && countactive){
+            from=ctx.request.query.from;
+            to=ctx.request.query.to;
+            count=ctx.request.query.count;
+            queryString='SELECT S.ID AS ID,START_TIME,END_TIME,FNAME,LNAME FROM SHIFT S,USER U WHERE U.ID=S.SUPERVISOR_ID AND S.PID=? AND S.START_TIME>=? AND S.START_TIME<=? LIMIT ?';
+            viewShiftResult=await databaseUtils.executeQuery(queryString, [pid,from,to,count]);
+        }
+        else if(dateactive){
+            from=ctx.request.query.from;
+            to=ctx.request.query.to;
+            queryString='SELECT S.ID AS ID,START_TIME,END_TIME,FNAME,LNAME FROM SHIFT S,USER U WHERE U.ID=S.SUPERVISOR_ID AND S.PID=? AND S.START_TIME>=? AND S.START_TIME<=?';
+            viewShiftResult=await databaseUtils.executeQuery(queryString, [pid,from,to]);
+        }
+        else if(countactive){
+            count=ctx.request.query.count;
+            queryString='SELECT S.ID AS ID,START_TIME,END_TIME,FNAME,LNAME FROM SHIFT S,USER U WHERE U.ID=S.SUPERVISOR_ID AND S.PID=? LIMIT ?';
+            viewShiftResult=await databaseUtils.executeQuery(queryString, [pid,count]);
+        }
+        else{
+            queryString='SELECT S.ID AS ID,START_TIME,END_TIME,FNAME,LNAME FROM SHIFT S,USER U WHERE U.ID=S.SUPERVISOR_ID AND S.PID=?';
+            viewShiftResult=await databaseUtils.executeQuery(queryString, [pid]);
+        }
+        
+        var transports=await databaseUtils.executeQuery('SELECT * FROM TRANSPORT WHERE PID=?', [pid]);
+
+        var fuels=await databaseUtils.executeQuery('SELECT * FROM TANK_METADATA WHERE PID=?', [pid]);
+
+        await ctx.render('ishift',{
+            availableShiftResult:availableShiftResult,
+            availableSupervisorResult:availableSupervisorResult,
+            availableNozzleResult:availableNozzleResult,
+            endShiftResult:endShiftResult,
+            paymentModes:paymentModes,
+            viewShiftResult:viewShiftResult,
+            tanksResult:tanksResult,
+            countactive:countactive,
+            dateactive:dateactive,
+            from:from,
+            to:to,
+            count:count,
+            transports:transports,
+            fuels:fuels,
+            tanksResult1:tanksResult1,
+        });
+    },
+    showiShift2Page: async (ctx) => {
+        var pid;
+try{ pid=ctx.currentUser[0].PID;}
+catch(e){pid=0;}
+
+
+        var stype=ctx.request.body.stype;
+        var supervisor_id=ctx.request.body.supervisor;
+        var act=ctx.request.body.act.split(" ");
+        var queryString;
+        var query;
+        if(act[0]=="1"){
+        var uid;
+        var aor;
+        var dor;
+        queryString='INSERT INTO SHIFT (SUPERVISOR_ID,START_TIME,END_TIME,SHIFT_META_DATA_ID,PID) SELECT ?, date(\'now\') || \' \' || STARTTIME, date(\'now\') || \' \' || ENDTIME, ID, ? FROM SHIFT_METADATA WHERE ID=?';
+        var res=await databaseUtils.executeQuery(queryString, [supervisor_id, pid, stype]);
+        var sid=res.lastInsertRowid;
+        console.log(res);
+        
+        queryString='SELECT ID FROM NOZZLE WHERE PID=?';
+        var nid=await databaseUtils.executeQuery(queryString, [pid]);
+        for(var i=0;i<parseInt(act[1]);++i){
+            uid=ctx.request.body['user'+i];
+            aor=ctx.request.body['aor'+i];
+            dor=ctx.request.body['dor'+i];
+            console.log(uid);
+            console.log(aor);
+            console.log(dor);
+            
+            queryString='INSERT INTO SHIFT_NOZZLE_DSM (SHIFT_ID,NOZZLE_ID,USER_ID,AOR,DOR,ACR,DCR,PUMP_TEST,SELF) VALUES(?,?,?,?,?,?,?,?,?)';
+            var r=await databaseUtils.executeQuery(queryString, [sid,nid[i].ID,uid,aor,dor,0,0,0,0]);
+        }
+        var or;
+        tankid=await databaseUtils.executeQuery('SELECT ID FROM TANK_METADATA WHERE PID=? ORDER BY TYPE', [pid]);
+        for(var i=0;i<parseInt(act[2]);++i){
+            or=ctx.request.body['cr'+i];
+            queryString='INSERT INTO TANK (TANK_ID,SHIFT_ID,OPEN_READING,CLOSE_READING,FUEL_RECEIVED) VALUES(?,?,?,?,?)';
+            var re=await databaseUtils.executeQuery(queryString, [tankid[i].ID,sid,or,0,0]);
+        }
+        var res=await databaseUtils.executeQuery('INSERT INTO SHIFT_PRICE (PID,PRO_ID,PRICE,QTY,SID) SELECT ?,ID,PRICE,QTY,? FROM PRODUCT WHERE PID=?', [pid,sid,pid]);
+        }
+        else if(act[0]=="2"){
+        var sid=parseInt(act[2]);
+        var acr;
+        var dcr;
+        var pt;
+        var self;
+        queryString='SELECT ID FROM NOZZLE WHERE PID=? ORDER BY NOZZLE_NUMBER';
+        var nid=await databaseUtils.executeQuery(queryString, [pid]);
+
+        queryString='SELECT ID FROM COLLECTION_MODE WHERE PID=? ORDER BY MODE';
+        var cmid=await databaseUtils.executeQuery(queryString, [pid]);
+        
+        queryString='SELECT ID FROM SHIFT_NOZZLE_DSM WHERE SHIFT_ID=?';
+        var sndid=await databaseUtils.executeQuery(queryString, [sid]);
+        
+        var tankid=await databaseUtils.executeQuery('SELECT ID FROM TANK_METADATA WHERE PID=? ORDER BY TYPE', [pid]);
+        queryString='UPDATE SHIFT_NOZZLE_DSM SET ACR=?,DCR=?,PUMP_TEST=?,SELF=? WHERE SHIFT_ID=? AND NOZZLE_ID=?';
+        for(var i=0;i<nid.length;++i){
+            acr=ctx.request.body['acr'+i];
+            dcr=ctx.request.body['dcr'+i];
+            pt=ctx.request.body['pt'+i];
+            self=ctx.request.body['self'+i];
+            var r=await databaseUtils.executeQuery(queryString, [acr,dcr,pt,self,sid,nid[i].ID]);
+        }
+        queryString='INSERT INTO SHIFT_COLLECTION (SHIFT_NOZZLE_DSM_ID,COLLECTION_MODE_ID,AMOUNT,PID) VALUES(?,?,?,?)';
+        for(var i=0;i<nid.length;++i){
+            for(var j=0;j<cmid.length;++j){
+                var amt=ctx.request.body['amt'+i+' '+j];
+                var r=await databaseUtils.executeQuery(queryString, [sndid[i].ID,cmid[j].ID,amt,pid]);
+            }
+        }
+        var cr;
+        for(var i=0;i<tankid.length;++i){
+            cr=ctx.request.body['cr'+i];
+            queryString='UPDATE TANK SET CLOSE_READING=? WHERE TANK_ID=? AND SHIFT_ID=?';
+            var re=await databaseUtils.executeQuery(queryString, [cr,tankid[i].ID,sid]);
+        }
+        var fr=ctx.request.body.fuelreceived;
+        if(fr){
+            var ttno=ctx.request.body.ttno;
+            var transport=ctx.request.body.transport;
+            var product=ctx.request.body.product;
+            var invoiceno=ctx.request.body.invoiceno;
+            var invoicedate=ctx.request.body.invoicedate;
+            var invoiceamount=ctx.request.body.invoiceamount;
+            var invoiceqty=ctx.request.body.invoiceqty;
+            var invoicetemp=ctx.request.body.invoicetemp;
+            var rotemp=ctx.request.body.rotemp;
+            var invoicedensity=ctx.request.body.invoicedensity;
+            var rodensity=ctx.request.body.rodensity;
+            var tva=ctx.request.body.tva;
+            var shorttransport=ctx.request.body.short;
+            var fino=ctx.request.body.finvoiceno;
+            var fia=ctx.request.body.finvoiceamount;
+
+            queryString='INSERT INTO FUEL_RECEIPT (PID,TT,TID,PRO_ID,INVOICE_NO,INVOICE_DATE,INVOICE_AMOUNT,INVOICE_QTY,INVOICE_TEMP,RO_TEMP,INVOICE_DENSITY,RO_COMPOSITE_DENSITY,TVA,SHORT_REPORT,FREIGHT_INVOICE_NO,FREIGHT_INVOICE_AMOUNT) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+            res=await databaseUtils.executeQuery(queryString, [pid,ttno,transport,product,invoiceno,invoicedate,invoiceamount,invoiceqty,invoicetemp,rotemp,invoicedensity,rodensity,tva,shorttransport,fino,fia]);
+            
+        }
+        var toupdate=await databaseUtils.executeQuery('SELECT CM.ID,SUM(AMOUNT) as CRDB FROM SHIFT S,SHIFT_NOZZLE_DSM SND,COLLECTION_MODE CM,SHIFT_COLLECTION SC WHERE S.ID=SND.SHIFT_ID AND SND.ID=SC.SHIFT_NOZZLE_DSM_ID AND SC.COLLECTION_MODE_ID=CM.ID AND S.PID=? AND S.ID=? GROUP BY CM.MODE', [pid,sid]);
+        var oldbal=await databaseUtils.executeQuery('SELECT B.MODE,BAL FROM COLLECTION_MODE CM,BALANCE B WHERE CM.PID=? AND B.SID=(SELECT MAX(SID) FROM BALANCE WHERE PID=?) AND CM.ID=B.MODE ORDER BY B.MODE ', [pid,pid]);
+        var len;
+        if(toupdate.length>oldbal.length) len=toupdate.length;
+        else len=oldbal.length;
+        for(var i=0;i<len;++i){
+            if(toupdate.ID==oldbal.MODE){
+                res=await databaseUtils.executeQuery('INSERT INTO BALANCE (CRDB,BAL,PID,MODE,SID) VALUES(?,?,?,?,?)', [toupdate[i].CRDB,toupdate[i].CRDB+oldbal[i].BAL,pid,oldbal[i].MODE,sid]);
+            }
+        }
+    }
+        ctx.redirect('/app/ishift');
+
+    },
+
+
+
+
+
+
+    showiSchedulePage: async (ctx) => {
+        var pid;
+try{ pid=ctx.currentUser[0].PID;}
+catch(e){pid=0;}
+
+
+        var QueryString;
+        var query;
+        QueryString='SELECT SHIFT_METADATA.ID,STARTTIME,ENDTIME,SHIFT_TYPE,SID,FNAME,LNAME,SHIFT_METADATA.ACTIVE  FROM SHIFT_METADATA,USER WHERE USER.ID=SHIFT_METADATA.SID  AND USER.PID=?';
+        var ScheduleResult=await databaseUtils.executeQuery(QueryString, [pid]);
+        //queryString='SELECT DISTINCT(FNAME),U1.ID AS ID FROM USER U1,SHIFT_METADATA SM WHERE U1.ID=SM.SID AND SM.PID=%s';
+        queryString='SELECT U.ID AS ID,FNAME FROM USER U,ROLE R,USER_ROLE UR WHERE U.ID=UR.USER_ID AND R.ID=UR.ROLE_ID AND R.TYPE=\'SUPERVISOR\' AND U.PID=?';
+        var availableSupervisorResult=await databaseUtils.executeQuery(queryString, [pid]);
+        //var QueryString='SELECT DISTINCT(SHIFT_TYPE) FROM SHIFT_METADATA WHERE PID=%s';
+        //var query=util.format(QueryString,pid);
+        //var ShiftType=yield databaseUtils.executeQuery(query);
+        await ctx.render('ischedule',{
+            ScheduleResult:ScheduleResult,
+            availableSupervisorResult:availableSupervisorResult,
+          //  ShiftType:ShiftType,
+    });
+},
+showiSchedule2Page: async (ctx) => {
+    var pid;
+try{ pid=ctx.currentUser[0].PID;}
+catch(e){pid=0;}
+
+
+    var scid=ctx.request.body.scid;
+    var sid=ctx.request.body.sid;
+    var starttime=ctx.request.body.starttime;
+    var endtime=ctx.request.body.endtime;
+    var act=ctx.request.body.scid.split(' ');
+    if(parseInt(act[0])==1){
+        //try{
+       // pid=ctx.request.body.pid;
+       // var starttime=ctx.request.body.starttime;
+       // var endtime=ctx.request.body.endtime;
+        var shifttype =ctx.request.body.shifttype;
+        //var sid =ctx.request.body.sid;
+        var queryString='INSERT INTO SHIFT_METADATA (PID,STARTTIME,ENDTIME,SHIFT_TYPE,SID) VALUES(?, date(\'now\') || ?, date(\'now\') || ?, ?, ?)';
+        var res=await databaseUtils.executeQuery(queryString, [pid, ' '+starttime, ' '+endtime, shifttype, sid]);
+        //}
+        // catch(e){
+        //     pid=1;
+        // }
+    }
+    else if(parseInt(act[0]==2)){
+       // var pid=ctx.currentUser[0].PID;
+       scid=parseInt(act[1]);
+    var queryString='UPDATE SHIFT_METADATA SET STARTTIME=date(\'now\') || ?, ENDTIME=date(\'now\') || ?, SID=? WHERE ID=?';
+    var res=await databaseUtils.executeQuery(queryString, [' '+starttime, ' '+endtime, sid, scid]);
+    }
+    else{
+        console.log(act);
+        if(parseInt(act[1])==0){
+            var res=await databaseUtils.executeQuery('UPDATE SHIFT_METADATA SET ACTIVE=0 WHERE ID=?', [parseInt(act[2])]);
+        }
+        else{
+            var res=await databaseUtils.executeQuery('UPDATE SHIFT_METADATA SET ACTIVE=1 WHERE ID=?', [parseInt(act[2])]);
+        }
+    }
+
+   
+    var ScheduleQueryString;
+    var ScheduleQuery;
+    // var wf;
+    try{
+        //var wf=ctx.request.body.stype;
+        
+            ScheduleQueryString='SELECT SHIFT_METADATA.ID,STARTTIME,ENDTIME,SHIFT_TYPE,SID,FNAME,LNAME  FROM SHIFT_METADATA,USER WHERE USER.ID=SHIFT_METADATA.SID  AND USER.PID=?';
+            ScheduleResult=await databaseUtils.executeQuery(ScheduleQueryString, [pid]);
+    
+    
+
+    /*var tankTypeQueryString='SELECT DISTINCT(TYPE) FROM TANK_METADATA WHERE PID=%s';
+    var tankTypeQuery=util.format(tankTypeQueryString,pid);
+    var tankType=yield databaseUtils.executeQuery(tankTypeQuery);
+*/
+queryString='SELECT DISTINCT(FNAME),U1.ID AS ID FROM USER U1,SHIFT_METADATA SM WHERE U1.ID=SM.SID AND SM.PID=?';
+var availableSupervisorResult=await databaseUtils.executeQuery(queryString, [pid]);
+ctx.redirect('ischedule');
+/*
+    await ctx.render('ischedule',{
+        ScheduleResult:ScheduleResult,
+        availableSupervisorResult:availableSupervisorResult,
+});*/
+}
+catch(e){
+    console.log(e);
+}
+}

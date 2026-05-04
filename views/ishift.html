@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+        <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+                     <!--   <pre style="background:#111;color:#0f0;padding:15px;font-size:12px;">
+DEBUG  endShiftHeaderResult :
+<%= JSON.stringify(endShiftHeaderResult
+, null, 2) %>
+DEBUG endShiftNozzleResult:
+<%= JSON.stringify(endShiftNozzleResult, null, 2) %>
+
+DEBUG availableNozzleResult1
+:
+<%= JSON.stringify(availableNozzleResult1
+, null, 2) %>
+
+
+DEBUG viewShiftResult
+:
+<%= JSON.stringify(viewShiftResult
+, null, 2) %>
+
+
+</pre>-->
+                        <!-- Page Content -->
+                        <div class="dashboard-header">
+                            <h1>📅 Shift Management</h1>
+                            <p>Manage your shifts and operations.</p>
+                        </div>
+
+                        <div
+                            style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs" id="shiftTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="create-tab" data-bs-toggle="tab"
+                                        data-bs-target="#create" type="button" role="tab">
+                                        Create Shift
+                                    </button>
+                                </li>
+
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="view-tab" data-bs-toggle="tab" data-bs-target="#view"
+                                        type="button" role="tab">
+                                        View Shifts
+                                    </button>
+                                </li>
+
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="end-tab" data-bs-toggle="tab" data-bs-target="#end"
+                                        type="button" role="tab">
+                                        End Shift
+                                    </button>
+                                </li>
+                            </ul>
+
+
+                            <!-- Tab content -->
+                            <div class="tab-content mt-4" id="shiftTabsContent">
+                                <!-- Create Shift Tab -->
+                                <div class="tab-pane fade show active" id="create" role="tabpanel">
+                                    <h3>Create New Shift</h3>
+                                    <% if(availableShiftResult && availableShiftResult.length==0) { %>
+                                        <div class="alert alert-info">No more shifts available to create.</div>
+                                        <% } else { %>
+                                            <form action="/app/ishift" method="post">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <label for="stype" class="form-label">Available Shifts</label>
+                                                        <select name="stype" class="form-select" required>
+                                                            <% availableShiftResult.forEach((shift, i)=> { %>
+                                                                <option value="<%= shift.ID %>">
+                                                                    <%= shift.SHIFT_TYPE + ' - ' +
+                                                                        shift.STARTTIME.substring(0,24) %>
+                                                                </option>
+                                                                <% }); %>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="supervisor" class="form-label">Supervisor</label>
+                                                        <select name="supervisor" class="form-select" required>
+                                                            <% availableSupervisorResult.forEach((supervisor, i)=> { %>
+                                                                <% if(supervisor.TYPE &&
+                                                                    supervisor.TYPE.toUpperCase()==='SUPERVISOR' ) { %>
+                                                                    <option value="<%= supervisor.ID %>">
+                                                                        <%= supervisor.FNAME + ' ' + supervisor.LNAME %>
+                                                                    </option>
+                                                                    <% } %>
+                                                                        <% }); %>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <h4 class="mt-4">Nozzle Readings</h4>
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nozzle Number</th>
+                                                                <th>DSM</th>
+                                                                <th>Analog Opening Reading</th>
+                                                                <th>Digital Opening Reading</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% availableNozzleResult1.forEach((nozzle, i)=> { %>
+                                                                <tr>
+                                                                    <td>
+                                                                        <!-- REQUIRED: explicit nozzle mapping -->
+                                                                        <input type="hidden" name="nozzleId<%= i %>"
+                                                                            value="<%= nozzle.ID %>">
+
+                                                                        <input type="text" class="form-control"
+                                                                            value="<%= nozzle.NOZZLE_NUMBER %>"
+                                                                            disabled>
+                                                                    </td>
+                                                                    <td>
+                                                                        <select name="<%= 'user'+i %>"
+                                                                            class="form-select">
+                                                                            <% availableSupervisorResult.forEach((supervisor,
+                                                                                j)=> { %>
+                                                                                <% if(supervisor.TYPE &&
+                                                                                    supervisor.TYPE.toUpperCase()==='DSM'
+                                                                                    ) { %>
+                                                                                    <option
+                                                                                        value="<%= supervisor.ID %>">
+                                                                                        <%= supervisor.FNAME + ' ' +
+                                                                                            supervisor.LNAME %>
+                                                                                    </option>
+                                                                                    <% } %>
+                                                                                        <% }); %>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" step="0.01"
+                                                                            name="<%= 'aor'+i %>"
+                                                                            value="<%= nozzle.AOR %>"
+                                                                            class="form-control">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" step="0.01"
+                                                                            name="<%= 'dor'+i %>"
+                                                                            value="<%= nozzle.DOR %>"
+                                                                            class="form-control">
+                                                                    </td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <h4 class="mt-4">Tank Readings</h4>
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Tank Type</th>
+                                                                <th>Opening Reading</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% tanksResult.forEach((tank, i)=> { %>
+                                                                <tr>
+                                                                    <td>
+                                                                        <input type="text" class="form-control"
+                                                                            name="<%= 'ty'+i %>"
+                                                                            value="<%= tank.TYPE %>" readonly>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" step="0.01"
+                                                                            name="<%= 'cr'+i %>"
+                                                                            value="<%= tank.CLOSE_READING %>"
+                                                                            class="form-control">
+                                                                    </td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div class="text-center mt-4">
+                                                    <button type="submit" name="act"
+                                                        value="<%= '1 '+availableNozzleResult1.length+' '+tanksResult.length %>"
+                                                        class="btn btn-success btn-lg">Create Shift</button>
+                                                </div>
+                                            </form>
+                                            <% } %>
+                                </div>
+
+                                <!-- View Shifts Tab -->
+                                <div class="tab-pane fade" id="view" role="tabpanel">
+                                    <h3>View Shifts</h3>
+                                    <form action="/app/ishift" method="get" class="mb-4">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <% if(dateactive) { %>
+                                                        <input type="checkbox" name="dateactive" value="1" checked
+                                                            class="form-check-input" id="dateFilter">
+                                                        <% } else { %>
+                                                            <input type="checkbox" name="dateactive" value="1"
+                                                                class="form-check-input" id="dateFilter">
+                                                            <% } %>
+                                                                <label class="form-check-label" for="dateFilter">Filter
+                                                                    by Date</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <% if(countactive) { %>
+                                                        <input type="checkbox" name="countactive" value="1" checked
+                                                            class="form-check-input" id="countFilter">
+                                                        <% } else { %>
+                                                            <input type="checkbox" name="countactive" value="1"
+                                                                class="form-check-input" id="countFilter">
+                                                            <% } %>
+                                                                <label class="form-check-label" for="countFilter">Limit
+                                                                    Results</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="status" class="form-label">Status</label>
+                                                <select name="status" class="form-select">
+                                                    <option value="">All</option>
+                                                    <option value="active" <%=status==='active' ? 'selected' : '' %>
+                                                        >Active</option>
+                                                    <option value="completed" <%=status==='completed' ? 'selected' : ''
+                                                        %>>Completed</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="supervisor" class="form-label">Supervisor</label>
+                                                <select name="supervisor" class="form-select">
+                                                    <option value="">All Supervisors</option>
+                                                    <% availableSupervisorResult.forEach((supervisorItem, i)=> { %>
+                                                        <% if(supervisorItem.TYPE &&
+                                                            supervisorItem.TYPE.toUpperCase()==='SUPERVISOR' ) { %>
+                                                            <option value="<%= supervisorItem.ID %>"
+                                                                <%=supervisor==supervisorItem.ID ? 'selected' : '' %>>
+                                                                <%= supervisorItem.FNAME + ' ' + supervisorItem.LNAME %>
+                                                            </option>
+                                                            <% } %>
+                                                                <% }); %>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-4">
+                                                <label for="from" class="form-label">From Date</label>
+                                                <% if(dateactive) { %>
+                                                    <input type="date" name="from" value="<%= from %>"
+                                                        class="form-control">
+                                                    <% } else { %>
+                                                        <input type="date" name="from" class="form-control">
+                                                        <% } %>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="to" class="form-label">To Date</label>
+                                                <% if(dateactive) { %>
+                                                    <input type="date" name="to" value="<%= to %>" class="form-control">
+                                                    <% } else { %>
+                                                        <input type="date" name="to" class="form-control">
+                                                        <% } %>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="count" class="form-label">Max Results</label>
+                                                <% if(countactive) { %>
+                                                    <input type="number" name="count" value="<%= count %>" min="1"
+                                                        max="100" class="form-control">
+                                                    <% } else { %>
+                                                        <input type="number" name="count" min="1" max="100"
+                                                            class="form-control">
+                                                        <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="text-center mt-3">
+                                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                            <a href="/app/ishift" class="btn btn-secondary">Clear Filters</a>
+                                        </div>
+                                    </form>
+
+                                    <!-- Search Input -->
+                                    <div class="mb-3">
+                                        <input type="text" id="searchInput" class="form-control"
+                                            placeholder="Search shifts...">
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover" id="shiftTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Shift ID</th>
+                                                    <th>Shift Type</th>
+                                                    <th>Start Time</th>
+                                                    <th>End Time</th>
+                                                    <th>Supervisor</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (Array.isArray(viewShiftResult) && viewShiftResult.length) { %>
+                                                    <% viewShiftResult.forEach((shift, i)=> { %>
+                                                        <tr>
+                                                            <td>
+                                                                <%= shift.ID %>
+                                                            </td>
+                                                            <td>
+                                                                <%= shift.SHIFT_TYPE %>
+                                                            </td>
+                                                            <td>
+                                                                <%= shift.START_TIME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= shift.END_TIME || 'Ongoing' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= shift.FNAME + ' ' + shift.LNAME %>
+                                                            </td>
+                                                            <td>
+                                                                <% if(shift.END_TIME) { %>
+                                                                    <span class="badge bg-success">Completed</span>
+                                                                    <% } else { %>
+                                                                        <span class="badge bg-warning">Active</span>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-info btn-view-shift"
+                                                                    data-id="<%= shift.ID %>"
+                                                                    data-type="<%= shift.SHIFT_TYPE %>"
+                                                                    data-start="<%= shift.START_TIME %>"
+                                                                    data-end="<%= shift.END_TIME %>"
+                                                                    data-supervisor="<%= shift.FNAME + ' ' + shift.LNAME %>">View
+                                                                    Details</button>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                            <% } else { %>
+                                                                <tr>
+                                                                    <td colspan="7" class="text-center">No shifts found.
+                                                                    </td>
+                                                                </tr>
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination Nav -->
+                                    <nav aria-label="Shift pagination">
+                                        <ul class="pagination justify-content-center" id="shiftPagination"></ul>
+                                    </nav>
+                                </div>
+
+                                <!-- End Shift Tab -->
+                                <div class="tab-pane fade" id="end" role="tabpanel">
+                                    <h3>End Active Shift</h3>
+
+                                    <% if (endShiftHeaderResult && endShiftHeaderResult.length> 0) { %>
+
+                                        <!-- ===== Shift Header ===== -->
+                                        <div class="alert alert-info">
+                                            <strong>Current Shift:</strong>
+                                            <%= endShiftHeaderResult[0].SHIFT_TYPE %> |
+                                                <strong>Started:</strong>
+                                                <%= endShiftHeaderResult[0].START_TIME %> |
+                                                    <strong>Supervisor:</strong>
+                                                    <%= endShiftHeaderResult[0].FNAME + ' ' +
+                                                        endShiftHeaderResult[0].LNAME %>
+                                        </div>
+
+                                        <form action="/app/ishift" method="post">
+
+                                            <!-- ===== Hidden meta (KEEP OLD FORMAT) ===== -->
+                                            <input type="hidden" name="act"
+                                                value="<%= '2 '+endShiftNozzleResult.length+' '+endShiftHeaderResult[0].SHIFT_ID+' '+paymentModes.length %>">
+
+                                            <!-- ========================= -->
+                                            <!-- 1️⃣ NOZZLE CLOSING TABLE -->
+                                            <!-- ========================= -->
+                                            <h4>Nozzle Readings</h4>
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Nozzle</th>
+                                                            <th>DSM</th>
+                                                            <th>AOR</th>
+                                                            <th>ACR</th>
+                                                            <th>DOR</th>
+                                                            <th>DCR</th>
+                                                            <th>Pump Test</th>
+                                                            <th>Self</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% endShiftNozzleResult.forEach((n, i)=> { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <input class="form-control"
+                                                                        value="<%= n.NOZZLE_ID %>" disabled>
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control"
+                                                                        value="<%= n.FNAME + ' ' + n.LNAME %>" disabled>
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" value="<%= n.AOR %>"
+                                                                        disabled>
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" name="<%= 'acr'+i %>">
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" value="<%= n.DOR %>"
+                                                                        disabled>
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" name="<%= 'dcr'+i %>">
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" name="<%= 'pt'+i %>">
+                                                                </td>
+                                                                <td>
+                                                                    <input class="form-control" name="<%= 'self'+i %>">
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- ========================= -->
+                                            <!-- 2️⃣ COLLECTION MODES -->
+                                            <!-- ========================= -->
+                                            <h4>Collections</h4>
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nozzle</th>
+                                                        <th>Mode</th>
+                                                        <th>Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% availableNozzleResult1.forEach((nz, i)=> { %>
+                                                        <% paymentModes.forEach((pm, j)=> { %>
+                                                            <tr>
+                                                                <td><input class="form-control"
+                                                                        value="<%= nz.NOZZLE_NUMBER %>" disabled></td>
+                                                                <td><input class="form-control" value="<%= pm.MODE %>"
+                                                                        disabled></td>
+                                                                <td><input class="form-control"
+                                                                        name="amt_<%= i %>_<%= j %>">
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                                <% }) %>
+                                                </tbody>
+                                            </table>
+
+                                            <!-- ========================= -->
+                                            <!-- 3️⃣ TANK CLOSING -->
+                                            <!-- ========================= -->
+                                            <h4>Tank Readings</h4>
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Opening</th>
+                                                        <th>Closing</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% tanksResult1.forEach((t, i)=> { %>
+                                                        <tr>
+                                                            <td><input class="form-control" value="<%= t.TYPE %>"
+                                                                    disabled></td>
+                                                            <td><input class="form-control"
+                                                                    value="<%= t.OPEN_READING %>" disabled></td>
+                                                            <td><input class="form-control" name="<%= 'cr'+i %>"></td>
+                                                        </tr>
+                                                        <% }) %>
+                                                </tbody>
+                                            </table>
+
+                                            <!-- ========================= -->
+                                            <!-- 4️⃣ FUEL RECEIPT -->
+                                            <!-- ========================= -->
+                                            <div class="text-center">
+                                                <input type="checkbox" name="fuelreceived" id="fuelreceived">
+                                                <label for="fuelreceived">Fuel Received</label>
+                                            </div>
+
+                                            <div class="fuelreceipt mt-3">
+                                                <table class="table table-striped">
+                                                    <tr>
+                                                        <td>TT No.</td>
+                                                        <td><input class="form-control" name="ttno"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Transport</td>
+                                                        <td>
+                                                            <select name="transport" class="form-control">
+                                                                <% transports.forEach(t=> { %>
+                                                                    <option value="<%= t.ID %>">
+                                                                        <%= t.NAME %>
+                                                                    </option>
+                                                                    <% }) %>
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Product</td>
+                                                        <td>
+                                                            <select name="product" class="form-control">
+                                                                <% fuels.forEach(f=> { %>
+                                                                    <option value="<%= f.ID %>">
+                                                                        <%= f.TYPE %>
+                                                                    </option>
+                                                                    <% }) %>
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice No.</td>
+                                                        <td><input class="form-control" name="invoiceno"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice Date</td>
+                                                        <td><input type="date" class="form-control" name="invoicedate">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice Amount</td>
+                                                        <td><input class="form-control" name="invoiceamount"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice Qty</td>
+                                                        <td><input class="form-control" name="invoiceqty"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice Temp</td>
+                                                        <td><input class="form-control" name="invoicetemp"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>RO Temp</td>
+                                                        <td><input class="form-control" name="rotemp"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Invoice Density</td>
+                                                        <td><input class="form-control" name="invoicedensity"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>RO Density</td>
+                                                        <td><input class="form-control" name="rodensity"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>TVA</td>
+                                                        <td><input class="form-control" name="tva"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Short</td>
+                                                        <td><input class="form-control" name="short"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Freight Invoice No</td>
+                                                        <td><input class="form-control" name="finvoiceno"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Freight Amount</td>
+                                                        <td><input class="form-control" name="finvoiceamount"></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+
+                                            <!-- ===== Submit ===== -->
+                                            <div class="text-center mt-4">
+                                                <button type="submit" class="btn btn-danger btn-lg">
+                                                    End Shift
+                                                </button>
+                                            </div>
+
+                                        </form>
+
+                                        <% } else { %>
+                                            <div class="alert alert-warning">No active shifts to end.</div>
+                                            <% } %>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+
+        <script>
+            
+
+            // Initialize sidebar state on page load
+            document.addEventListener('DOMContentLoaded', function () {
+              
+
+                // Pagination and search functionality for shift table
+                const rowsPerPage = 8;
+                const table = document.getElementById('shiftTable');
+                const searchInput = document.getElementById('searchInput');
+                const pagination = document.getElementById('shiftPagination');
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+                function renderPage(page, filteredRows) {
+                    rows.forEach(r => r.style.display = 'none');
+                    filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).forEach(r => r.style.display = 'table-row');
+                }
+
+                function renderPagination(filteredRows) {
+                    pagination.innerHTML = '';
+                    const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+                    if (pageCount <= 1) return;
+
+                    for (let i = 1; i <= pageCount; i++) {
+                        const li = document.createElement('li');
+                        li.className = 'page-item';
+                        const a = document.createElement('a');
+                        a.className = 'page-link';
+                        a.href = '#';
+                        a.textContent = i;
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            renderPage(i, filteredRows);
+                            document.querySelectorAll('#shiftPagination .page-link').forEach(el => el.parentElement.classList.remove('active'));
+                            a.parentElement.classList.add('active');
+                        });
+                        li.appendChild(a);
+                        pagination.appendChild(li);
+                    }
+
+                    if (pageCount > 0) {
+                        pagination.querySelector('.page-item a').parentElement.classList.add('active');
+                    }
+                }
+
+                function filterRows() {
+                    const query = searchInput.value.toLowerCase();
+                    const filtered = rows.filter(r => r.innerText.toLowerCase().indexOf(query) !== -1);
+                    renderPagination(filtered);
+                    renderPage(1, filtered);
+                }
+
+                searchInput.addEventListener('input', filterRows);
+                filterRows();
+
+                // View Shift Details
+                document.querySelectorAll('.btn-view-shift').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const shiftId = this.dataset.id;
+                        const shiftType = this.dataset.type;
+                        const startTime = this.dataset.start;
+                        const endTime = this.dataset.end;
+                        const supervisor = this.dataset.supervisor;
+
+                        alert(`Shift ID: ${shiftId}\nType: ${shiftType}\nStart: ${startTime}\nEnd: ${endTime || 'Ongoing'}\nSupervisor: ${supervisor}`);
+                    });
+                });
+            });
+        </script>
+        <% } else { %>
+            <div
+                style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div
+                    style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                    <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                    <a href="/app/login"
+                        style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                </div>
+            </div>
+            <% } %>
+                            <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

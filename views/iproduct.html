@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+        <style>
+            input[type=text],
+            input[type=number] {
+                width: 50%;
+            }
+        </style>
+</head>
+
+<body>
+    <% if(currentUser) { %>
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <div class="dashboard-header">
+                        <h1>📦 Product Monitoring</h1>
+                        <p>Monitor and manage fuel or non fuel product .</p>
+                    </div>
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+
+                        <form action="iproduct" method="get">
+                            <p align="center">
+                                <label for="ptype" class="filterlabel">Filter By Product Type</label>
+                                <select name="ptype" class="form-select" style="width: 50%;">
+                                    <% if(ptype=='All' ) {%>
+                                        <option value="All" selected="selected">All</option>
+                                        <% } else { %>
+                                            <option value="All">All</option>
+                                            <% } %>
+
+                                                <% if(ptype=='0' ) {%>
+                                                    <option value="0" selected="selected">Non-Fuel</option>
+                                                    <% } else { %>
+                                                        <option value="0">Non-Fuel</option>
+                                                        <% } %>
+
+                                                            <% if(ptype=='1' ) {%>
+                                                                <option value="1" selected="selected">Fuel</option>
+                                                                <% } else { %>
+                                                                    <option value="1">Fuel</option>
+                                                                    <% } %>
+                                </select>
+                                <label for="pname" class="filterlabel">Filter By Product Name</label>
+                                <select name="pname" class="form-select" style="width: 50%;">
+                                    <% if (pname && pname=='All' ) { %>
+                                        <option value="All" selected="selected">All</option>
+                                        <% } else { %>
+                                            <option value="All">All</option>
+                                            <% } %>
+
+                                                <% if (Array.isArray(productname) && productname.length) { %>
+                                                    <% productname.forEach((product, i)=> { %>
+                                                        <% if(pname==product.NAME) { %>
+                                                            <option value="<%= product.NAME %>" selected="selected">
+                                                                <%= product.NAME %>
+                                                            </option>
+                                                            <% } else { %>
+                                                                <option value="<%= product.NAME %>">
+                                                                    <%= product.NAME %>
+                                                                </option>
+                                                                <% } %>
+                                                                    <% }); %>
+                                                                        <% } %>
+                                </select>
+                                <button type="submit" name="act" value="0 1">Filter</button>
+                            </p>
+                        </form>
+
+                        <div class="card-box">
+                            <h2 class="mb-3">Product Management</h2>
+
+                            <!-- Search Input -->
+                            <div class="mb-3">
+                                <input type="text" id="searchInput" class="form-control"
+                                    placeholder="Search products...">
+                            </div>
+
+                            <table class="table align-middle" id="productTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% productDetails.forEach((product, i)=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= product.NAME %>
+                                            </td>
+                                            <td>
+                                                <%= product.TYPE==1 ? 'Fuel' : 'Non-Fuel' %>
+                                            </td>
+                                            <td>
+                                                <%= product.PRICE %>
+                                            </td>
+                                            <td>
+                                                <% if(product.MANAGE_STOCK==1){ %>
+                                                    <%= product.STOCK %>
+                                                        <% } else { %>
+                                                            <span class="text-muted">Not Tracked</span>
+                                                            <% } %>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge <%= product.ACTIVE == 1 ? 'bg-success' : 'bg-danger' %>">
+                                                    <%= product.ACTIVE==1 ? 'Active' : 'Inactive' %>
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-info btn-view"
+                                                    data-id="<%= product.ID %>" data-name="<%= product.NAME %>"
+                                                    data-type="<%= product.TYPE %>" data-price="<%= product.PRICE %>"
+                                                    data-qty="<%= product.QTY %>"
+                                                    data-active="<%= product.ACTIVE %>">View</button>
+                                                <button class="btn btn-sm btn-outline-warning btn-edit"
+                                                    data-id="<%= product.ID %>" data-name="<%= product.NAME %>"
+                                                    data-type="<%= product.TYPE %>" data-price="<%= product.PRICE %>"
+                                                    data-qty="<%= product.QTY %>" data-active="<%= product.ACTIVE %>"
+                                                    data-manage="<%= product.MANAGE_STOCK %>">Edit</button>
+                                                <button class="btn btn-sm btn-outline-danger btn-delete"
+                                                    data-id="<%= product.ID %>"
+                                                    data-active="<%= product.ACTIVE %>">Delete</button>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                            </table>
+
+                            <!-- Pagination Nav -->
+                            <nav aria-label="Product pagination">
+                                <ul class="pagination justify-content-center" id="productPagination"></ul>
+                            </nav>
+                        </div>
+                        <div style="text-align: right;">
+                            <button class="btn btn-success" id="btnAddProduct">+ Add Product</button>
+                        </div>
+                </div>
+
+                <!-- ADD MODAL -->
+                <div class="modal fade" id="addProductModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="/app/iproduct" method="post">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title">Add Product</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" class="form-control"
+                                            placeholder="Enter Product Name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Product Type</label><br>
+                                        <input type="radio" name="type" value="0" checked> Non-Fuel
+                                        &nbsp;&nbsp;
+                                        <input type="radio" name="type" value="1"> Fuel
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="price">Price</label>
+                                        <input type="text" name="price" class="form-control" placeholder="Enter Price">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Manage Stock?</label><br>
+                                        <input type="radio" name="manage_stock" value="1" checked> Yes
+                                        &nbsp;&nbsp;
+                                        <input type="radio" name="manage_stock" value="0"> No
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-success" name="act" value="0 4">Add</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EDIT MODAL -->
+                <div class="modal fade" id="editProductModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="/app/iproduct" method="post">
+                                <div class="modal-header bg-warning text-white">
+                                    <h5 class="modal-title">Edit Product</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" id="editName" class="form-control"
+                                            placeholder="Enter Product Name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Product Type</label><br>
+                                        <input type="radio" name="type" id="editType0" value="0"> Non-Fuel
+                                        &nbsp;&nbsp;
+                                        <input type="radio" name="type" id="editType1" value="1"> Fuel
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="price">Price</label>
+                                        <input type="text" name="price" id="editPrice" class="form-control"
+                                            placeholder="Enter Price">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Manage Stock?</label><br>
+                                        <input type="radio" name="manage_stock" id="editStock1" value="1"> Yes
+                                        &nbsp;&nbsp;
+                                        <input type="radio" name="manage_stock" id="editStock0" value="0"> No
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-warning" id="editSubmit">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW MODAL -->
+                <div class="modal fade" id="viewProductModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title">View Product Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <p id="viewName" class="form-control-plaintext"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <p id="viewType" class="form-control-plaintext"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Price</label>
+                                    <p id="viewPrice" class="form-control-plaintext"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <p id="viewQty" class="form-control-plaintext"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Working</label>
+                                    <p id="viewActive" class="form-control-plaintext"></p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELETE MODAL -->
+                <div class="modal fade" id="deleteProductModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete this product?</p>
+                                <p class="text-muted">This action cannot be undone.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" id="confirmDeleteProduct">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELETE FORM -->
+                <form method="post" action="/app/iproduct" id="deleteForm">
+                    <input type="hidden" name="act" id="deleteAct">
+                </form>
+
+                <script>
+                    /* ADD */
+                    $('#btnAddProduct').click(function () {
+                        const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+                        modal.show();
+                    });
+
+                    /* VIEW */
+                    $('.btn-view').click(function () {
+                        $('#viewName').text($(this).data('name'));
+                        $('#viewType').text($(this).data('type') == '1' ? 'Fuel' : 'Non-Fuel');
+                        $('#viewPrice').text($(this).data('price'));
+                        $('#viewQty').text($(this).data('qty'));
+                        $('#viewActive').text($(this).data('active') == '1' ? 'YES' : 'NO');
+                        const modal = new bootstrap.Modal(document.getElementById('viewProductModal'));
+                        modal.show();
+                    });
+
+                    /* EDIT */
+                    $('.btn-edit').click(function () {
+                        if ($(this).data('manage') == '1') {
+                            $('#editStock1').prop('checked', true);
+                        } else {
+                            $('#editStock0').prop('checked', true);
+                        }
+                        $('#editName').val($(this).data('name'));
+                        if ($(this).data('type') == '1') {
+                            $('#editType1').prop('checked', true);
+                        } else {
+                            $('#editType0').prop('checked', true);
+                        }
+                        $('#editPrice').val($(this).data('price'));
+                        $('#editQty').val($(this).data('qty'));
+                        $('#editSubmit').val('2 ' + $(this).data('id'));
+                        const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                        modal.show();
+                    });
+
+                    /* DELETE */
+                    let deleteProductId = null;
+                    let deleteProductActive = null;
+                    $('.btn-delete').click(function () {
+                        deleteProductId = $(this).data('id');
+                        deleteProductActive = $(this).data('active');
+                        const modal = new bootstrap.Modal(document.getElementById('deleteProductModal'));
+                        modal.show();
+                    });
+
+                    $('#confirmDeleteProduct').click(function () {
+                        if (deleteProductId) {
+                            const action = deleteProductActive == '1' ? '3 0 ' : '3 1 ';
+                            $('#deleteAct').val(action + deleteProductId);
+                            $('#deleteForm').submit();
+                        }
+                    });
+
+                    // Search functionality
+                    $('#searchInput').on('keyup', function () {
+                        var value = $(this).val().toLowerCase();
+                        $('#productTable tbody tr').filter(function () {
+                            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                        });
+                    });
+                    $('input[name="type"]').change(function () {
+                        if ($(this).val() == "1") { // Fuel
+                            $('input[name="manage_stock"][value="1"]').prop('checked', true);
+                            $('input[name="manage_stock"]').prop('disabled', true);
+                        } else {
+                            $('input[name="manage_stock"]').prop('disabled', false);
+                        }
+                    });
+                </script>
+                <% } else { %>
+                    <div
+                        style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div
+                            style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                            <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                            <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                            <a href="/app/login"
+                                style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                        </div>
+                    </div>
+                    <% } %>
+                        <%- include('commonFooterScriptElements.html') %>
+                            <script>
+
+                                // Initialize sidebar state on page load
+                                document.addEventListener('DOMContentLoaded', function () {
+
+                                    // Pagination and search functionality for product table
+                                    const rowsPerPage = 8;
+                                    const table = document.getElementById('productTable');
+                                    const searchInput = document.getElementById('searchInput');
+                                    const pagination = document.getElementById('productPagination');
+                                    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+                                    function renderPage(page, filteredRows) {
+                                        rows.forEach(r => r.style.display = 'none');
+                                        filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).forEach(r => r.style.display = 'table-row');
+                                    }
+
+                                    function renderPagination(filteredRows) {
+                                        pagination.innerHTML = '';
+                                        const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+                                        if (pageCount <= 1) return;
+
+                                        for (let i = 1; i <= pageCount; i++) {
+                                            const li = document.createElement('li');
+                                            li.className = 'page-item';
+                                            const a = document.createElement('a');
+                                            a.className = 'page-link';
+                                            a.href = '#';
+                                            a.textContent = i;
+                                            a.addEventListener('click', (e) => {
+                                                e.preventDefault();
+                                                renderPage(i, filteredRows);
+                                                document.querySelectorAll('#productPagination .page-link').forEach(el => el.parentElement.classList.remove('active'));
+                                                a.parentElement.classList.add('active');
+                                            });
+                                            li.appendChild(a);
+                                            pagination.appendChild(li);
+                                        }
+
+                                        if (pageCount > 0) {
+                                            pagination.querySelector('.page-item a').parentElement.classList.add('active');
+                                        }
+                                    }
+
+                                    function filterRows() {
+                                        const query = searchInput.value.toLowerCase();
+                                        const filtered = rows.filter(r => r.innerText.toLowerCase().indexOf(query) !== -1);
+                                        renderPagination(filtered);
+                                        renderPage(1, filtered);
+                                    }
+
+                                    searchInput.addEventListener('input', filterRows);
+                                    filterRows();
+                                });
+                            </script>
+                            <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

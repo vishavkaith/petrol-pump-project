@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+</head>
+
+<body>
+
+    <% if (currentUser) { %>
+
+        <div class="dashboard-container">
+
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+
+                    <!-- User Dropdown -->
+                    <%- include('userdropdown') %>
+
+                        <!-- Page Header -->
+                        <div class="dashboard-header">
+                            <h1>⛽ Fuel Receipt</h1>
+                            <p>View fuel receipt entries (read-only)</p>
+                        </div>
+
+                        <!-- Content Card -->
+                        <div class="card-box">
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered  table-professional table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>TT No</th>
+                                            <th>Invoice No</th>
+                                            <th>Invoice Date</th>
+                                            <th>Invoice Amount</th>
+                                            <th>Invoice Qty</th>
+                                            <th>Invoice Temp</th>
+                                            <th>RO Temp</th>
+                                            <th>Invoice Density</th>
+                                            <th>RO Composite Density</th>
+                                            <th>TVA</th>
+                                            <th>Short Report</th>
+                                            <th>Freight Invoice No</th>
+                                            <th>Freight Amount</th>
+                                            <th>Transport</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <% if (!fuelDetails || fuelDetails.length===0) { %>
+                                            <tr>
+                                                <td colspan="14" class="text-center text-muted">
+                                                    No fuel receipt data available
+                                                </td>
+                                            </tr>
+                                            <% } else { %>
+                                                <% fuelDetails.forEach(f=> { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= f.TT || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_NO || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_DATE || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_AMOUNT || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_QTY || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_TEMP || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.RO_TEMP || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.INVOICE_DENSITY || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.RO_COMPOSITE_DENSITY || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.TVA || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.SHORT_REPORT || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.FREIGHT_INVOICE_NO || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.FREIGHT_INVOICE_AMOUNT || '-' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= f.TRANSPORT_NAME || '-' %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                </div>
+        </div>
+
+        <% } else { %>
+
+            <!-- Access Denied -->
+            <div
+                style="display:flex;justify-content:center;align-items:center;height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);">
+                <div style="background:#fff;padding:40px;border-radius:10px;text-align:center;">
+                    <h2 style="color:#e74c3c;">🔒 Access Denied</h2>
+                    <p>Please log in to access the dashboard.</p>
+                    <a href="/app/login" class="btn btn-primary">Login</a>
+                </div>
+            </div>
+
+            <% } %>
+
+                <%- include('commonFooterScriptElements.html') %>
+
+</body>
+
+</html>

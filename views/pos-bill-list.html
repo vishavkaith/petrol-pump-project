@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('commonHeadElements.html') %>
+
+        <style>
+            input[type=text],
+            input[type=number] {
+                width: 50%;
+            }
+        </style>
+
+</head>
+
+<body>
+    <% if(currentUser) { %>
+
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <%- include('sidebar') %>
+
+                <!-- Main Content -->
+                <div id="main">
+                    <!-- User Profile Dropdown -->
+                    <%- include('userdropdown') %>
+                        <div class="dashboard-header">
+                            <h1>📦 Sales Register</h1>
+                            <p>View all sales bills</p>
+                        </div>
+                        <input type="text" id="searchInput" placeholder="Search bills...">
+
+                        <table id="billTable" border="1" class="table align-middle">
+                            <tr>
+                                <th>Bill No</th>
+                                <th>Shift</th>
+                                <th>Cashier</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+
+                            <% bills.forEach(bill=> { %>
+                                <tr>
+                                    <td>
+                                        <%= bill.BILL_NO %>
+                                    </td>
+                                    <td>
+                                        <%= bill.SHIFT_ID %>
+                                    </td>
+                                    <td>
+                                        <%= bill.CASHIER_NAME %>
+                                    </td>
+                                    <td>₹ <%= bill.TOTAL %>
+                                    </td>
+                                    <td>
+                                        <%= bill.CREATED_AT %>
+                                    </td>
+                                    <td>
+                                        <a href="/app/pos/view/<%= bill.ID %>">View</a>
+                                        <a href="/app/pos/print/<%= bill.ID %>" target="_blank">Print</a>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </table>
+                </div>
+        </div>
+        <%- include('commonFooterScriptElements.html') %>
+
+            <% } else { %>
+                <div
+                    style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div
+                        style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center;">
+                        <h2 style="color: #e74c3c; margin-bottom: 20px;">🔒 Access Denied</h2>
+                        <p style="color: #7f8c8d; margin-bottom: 30px;">Please log in to access the dashboard.</p>
+                        <a href="/app/login"
+                            style="background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Login</a>
+                    </div>
+                </div>
+                <% } %>
+</body>
+
+</html>
+<script>
+    $('#searchInput').on('keyup', function () {
+        var value = $(this).val().toLowerCase();
+        $('#billTable tbody tr').filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+</script>
