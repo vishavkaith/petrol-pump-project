@@ -99,16 +99,6 @@ Professional ERP & Custom Software Development
 🌐 https://itsbegin.in
 
 
-This project was initially inspired by an open-source project.
-Significant modifications and custom development have been implemented.
-If you are the original author and want attribution, please contact me.
-## License
-
-This project is proprietary and is not open for public use, distribution, or modification without explicit permission from the author.
-
-© Vishav Bandhu. All rights reserved.
-For commercial usage or licensing inquiries, 
-please contact: mr.kaith@gmail.com Website:https://www.itsbegin.in/
 ## 📸 Screenshots
 
 ### 🖥️ Dashboard
@@ -124,3 +114,19 @@ please contact: mr.kaith@gmail.com Website:https://www.itsbegin.in/
 
 ### 📅 Shift
 ![Booking](screenshots/petrol-shift.png)
+
+
+
+
+
+
+This project was initially inspired by an open-source project.
+Significant modifications and custom development have been implemented.
+If you are the original author and want attribution, please contact me.
+## License
+
+This project is proprietary and is not open for public use, distribution, or modification without explicit permission from the author.
+
+© Vishav Bandhu. All rights reserved.
+For commercial usage or licensing inquiries, 
+please contact: mr.kaith@gmail.com Website:https://www.itsbegin.in/
